@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Pavel Fiser (MSD), Julie Dudasova (MSD)" />
+
+<meta name="date" content="2021-09-20" />
+
+<title>PoDBAY simulation</title>
+
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">PoDBAY simulation</h1>
+<h4 class="author">Pavel Fiser (MSD), Julie Dudasova (MSD)</h4>
+<h4 class="date">2021-09-20</h4>
+
+
+
+<p>This document accompanies the “A method to estimate probability of disease and vaccine efficacy from clinical trial immunogenicity data.” publication. It describes the application of PoDBAY package in the PoDBAY general simulation example.</p>
+<p>The goal of PoDBAY simulation analysis is to simulate the clinical trial and validate the PoDBAY method by comparing “True” efficacy, Case-count efficacy and PoDBAY efficacy. By running the simulations we obtain following information:</p>
+<ul>
+<li>True efficacy - efficacy based on the simulation inputs  </li>
+<li>Case-count efficacy with its confidence intervals<br />
+</li>
+<li>PoDBAY efficacy with its confidence intervals<br />
+</li>
+<li><span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(et_{50}\)</span> and <span class="math inline">\(\gamma\)</span> parameters of the PoD curve point estimate with its confidence intervals</li>
+</ul>
+<div id="podbay-simulation-introduction" class="section level2">
+<h2>PoDBAY simulation introduction</h2>
+<p>PoDBAY simulation is summarized by three subsequent steps as described in the publication, section Methods.</p>
+<ol style="list-style-type: decimal">
+<li>Assumed <strong>true values</strong> are assigned to PoD curve parameters (<span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(et_{50}\)</span> and <span class="math inline">\(\gamma\)</span>) and log titer distribution parameters (mean, sd, assuming normal distribution) for vaccinated and control group. <strong>True efficacy</strong> is calculated based on the “true” parameter inputs.<br />
+</li>
+<li>Log titer data are generated for the whole vaccinated and control population using random sampling from true distributions. Disease status is assigned to each subject using the probability of disease defined by the true PoD curve. <strong>Case-count efficacy</strong> and its CIs are estimated using the count of diseased and non-diseased subjects in vaccinated and control groups, as described in section Methods.</li>
+<li>Immunogenicity sample is created based on the desired design of study. See <code>method</code> parameter in the simulation inputs part below for further information.</li>
+<li>Individual titers of all diseased and all non-diseased subjects are used to estimate PoD curve parameters and their CIs, as described in section Methods. Using the individual titers of vaccinated and control, the probability density function parameters for vaccinated and control groups, respectively, are estimated. <strong>CoP-based (PoDBAY) efficacy</strong> and its CI are estimated, as described in section Methods. For further details see <code>vignette(&quot;efficacyestimation&quot;, package = &quot;PoDBAY&quot;)</code>.</li>
+</ol>
+<p>Steps 2 and 3 are repeated 1,000 times (1,000 simulations). Here we describe how to setup one simulation for the example based on Scenario A from the publication, see section Results.</p>
+</div>
+<div id="simulation-inputs" class="section level2">
+<h2>1. Simulation inputs</h2>
+<p>To run a simulation, following data needs to be provided:</p>
+<ul>
+<li>vaccinated population log titer distribution parameters - N, mean, standard deviation<br />
+</li>
+<li>control population log titer distribution parameters - N, mean, standard deviation<br />
+</li>
+<li>PoD curve parameters - <span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(et_{50}\)</span> and <span class="math inline">\(\gamma\)</span><br />
+</li>
+<li><code>method</code> parameters for creating immunogenicity sample - for details see <code>?ImmunogenicitySubset()</code> and <code>?BlindSampling()</code><br />
+</li>
+<li><code>repeatCount</code> parameter - represents size of the PoDBAY efficacy set <span class="math inline">\(e^{``}\)</span> we want to estimate. In our simulations we use <code>repeatCount</code> = 500 (in vignettes the number is set to 50 because of time constrains for vignettes building). For details see <code>PoDBAY efficacy estimation</code> section in <code>vignette(&quot;efficacyestimation&quot;, package = &quot;PoDBAY&quot;)</code>.  </li>
+<li>adjust titer parameters - <code>adjustTiters</code>, <code>adjustFrom</code>, <code>adjustTo</code>. For details see <code>?PoD()</code>.</li>
+</ul>
+<div id="method-parameter" class="section level3">
+<h3>Method parameter</h3>
+<p>This parameter decides how the Immunogenicity sample in the clinical trial is created (if any).</p>
+<p>It is a named list with two parameters “name” and “value” which are discussed below.</p>
+<div id="method-full" class="section level4">
+<h4><code>method</code> = “Full”</h4>
+<ul>
+<li>“name” = “Full”</li>
+<li>“value” = NA</li>
+</ul>
+<p>No immunogenicity sample is created. <strong>We have full titer information about diseased and non-diseased populations.</strong> See example of inactivated influenza vaccines for further details, section Results in the publication.</p>
+</div>
+<div id="method-ratio" class="section level4">
+<h4><code>method</code> = “Ratio”</h4>
+<ul>
+<li>“name” = “Ratio”</li>
+<li>“value” = <span class="math inline">\(N_{nondiseased}/ N_{diseased}\)</span>, ratio of nondiseased:diseased in the immunogenicity sample (method$value:1)</li>
+</ul>
+<p>Immunogenicity sample is created. <strong>We have full titer information about diseased but only partial titer information about nondiseased in the immunogenicity sample.</strong></p>
+</div>
+<div id="method-fixed" class="section level4">
+<h4><code>method</code> = “Fixed”</h4>
+<ul>
+<li>“name” = “Fixed”</li>
+<li>“value” = <span class="math inline">\(N_{nondiseased}\)</span>, fixed number of nondiseased in the immunogenicity sample.</li>
+</ul>
+<p>Immunogenicity sample is created. <strong>We have full titer information about diseased but only partial titer information about nondiseased in the immunogenicity sample.</strong> See example of zoster vaccine and dengue vaccine for further details, section Results in the publication.</p>
+</div>
+</div>
+<div id="adjust-titer-parameters" class="section level3">
+<h3>Adjust titer parameters</h3>
+<p>In some cases we might not be able to measure titer values below certain level (detection limit). In this case we might want to adjust level of titers below this detection limit to certain value.</p>
+<p>There three parameters which needs to be set:</p>
+<ul>
+<li><code>adjustTiters</code> = TRUE or FALSE - TRUE if titer values should be adjusted</li>
+<li><code>adjustFrom</code> - detection limit. All values below detection limit will be adjusted to <code>adjustTo</code> parameter value</li>
+<li><code>adjustTo</code> - value to which titers below detection limit will be adjusted</li>
+</ul>
+<p>Dengue vaccine case might serve as an example where the detection limit for <span class="math inline">\(log_2\)</span> titers is set to <span class="math inline">\(log_{2}10\)</span>. All <span class="math inline">\(log_2\)</span> titers below detection limit are assigned to <span class="math inline">\(log_{2}5\)</span> value. In this specific example we would set the parameters in the following way:</p>
+<ul>
+<li><code>adjustTiters</code> = TRUE</li>
+<li><code>adjustFrom</code> = <span class="math inline">\(log_{2}10\)</span></li>
+<li><code>adjustTo</code> = <span class="math inline">\(log_{2}5\)</span></li>
+</ul>
+</div>
+<div id="simulation-parameter-inputs" class="section level3">
+<h3>Simulation parameter inputs</h3>
+<p>Required libraries</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>vaccinated &lt;-<span class="st"> </span><span class="kw">list</span>()</span>
+<span id="cb1-2"><a href="#cb1-2"></a>vaccinated<span class="op">$</span>N =<span class="st"> </span><span class="dv">2000</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>vaccinated<span class="op">$</span>mean =<span class="st"> </span><span class="dv">8</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>vaccinated<span class="op">$</span>stdDev =<span class="st"> </span><span class="dv">2</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a></span>
+<span id="cb1-6"><a href="#cb1-6"></a>control &lt;-<span class="st"> </span><span class="kw">list</span>()</span>
+<span id="cb1-7"><a href="#cb1-7"></a>control<span class="op">$</span>N =<span class="st"> </span><span class="dv">1000</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>control<span class="op">$</span>mean =<span class="st"> </span><span class="dv">5</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>control<span class="op">$</span>stdDev =<span class="st"> </span><span class="dv">2</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a></span>
+<span id="cb1-11"><a href="#cb1-11"></a>PoDParams<span class="op">$</span>pmax =<span class="st"> </span><span class="fl">0.03</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a>PoDParams<span class="op">$</span>et50 =<span class="st"> </span><span class="dv">7</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a>PoDParams<span class="op">$</span>slope =<span class="st"> </span><span class="dv">7</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a>  </span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="co">#methods: &quot;Full&quot;, &quot;Ratio&quot;, &quot;Fixed&quot;</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a>  method &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">name =</span> <span class="st">&quot;Full&quot;</span>,</span>
+<span id="cb1-17"><a href="#cb1-17"></a>                 <span class="dt">value =</span> <span class="ot">NA</span>)</span>
+<span id="cb1-18"><a href="#cb1-18"></a>  </span>
+<span id="cb1-19"><a href="#cb1-19"></a>  <span class="co"># method &lt;- list(name = &quot;Ratio&quot;,</span></span>
+<span id="cb1-20"><a href="#cb1-20"></a>  <span class="co">#                value = 4)</span></span>
+<span id="cb1-21"><a href="#cb1-21"></a>  </span>
+<span id="cb1-22"><a href="#cb1-22"></a>  <span class="co"># method &lt;- list(name = &quot;Fixed&quot;,</span></span>
+<span id="cb1-23"><a href="#cb1-23"></a>  <span class="co">#                value = 300)</span></span>
+<span id="cb1-24"><a href="#cb1-24"></a>  </span>
+<span id="cb1-25"><a href="#cb1-25"></a>parameters &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">vaccinated =</span> vaccinated,</span>
+<span id="cb1-26"><a href="#cb1-26"></a>                   <span class="dt">control =</span> control,</span>
+<span id="cb1-27"><a href="#cb1-27"></a>                   <span class="dt">PoDParams =</span> PoDParams,</span>
+<span id="cb1-28"><a href="#cb1-28"></a>                   <span class="dt">method =</span> method,</span>
+<span id="cb1-29"><a href="#cb1-29"></a>                   <span class="dt">repeatCount =</span> <span class="dv">50</span>,</span>
+<span id="cb1-30"><a href="#cb1-30"></a>                   <span class="dt">adjustTiters =</span> <span class="ot">FALSE</span>,</span>
+<span id="cb1-31"><a href="#cb1-31"></a>                   <span class="dt">adjustFrom =</span> <span class="ot">NA</span>,</span>
+<span id="cb1-32"><a href="#cb1-32"></a>                   <span class="dt">adjustTo =</span> <span class="ot">NA</span>)</span></code></pre></div>
+</div>
+<div id="true-efficacy" class="section level3">
+<h3>True efficacy</h3>
+<p>True efficacy is calculated based on the provided parameters for vaccinated and control populations and PoD curve parameters.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>PoDParams &lt;-<span class="st"> </span>parameters<span class="op">$</span>PoDParams</span>
+<span id="cb2-2"><a href="#cb2-2"></a></span>
+<span id="cb2-3"><a href="#cb2-3"></a>means &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">vaccinated =</span> vaccinated<span class="op">$</span>mean, </span>
+<span id="cb2-4"><a href="#cb2-4"></a>              <span class="dt">control =</span> control<span class="op">$</span>mean)</span>
+<span id="cb2-5"><a href="#cb2-5"></a></span>
+<span id="cb2-6"><a href="#cb2-6"></a>standardDeviations &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">vaccinated =</span> vaccinated<span class="op">$</span>stdDev, </span>
+<span id="cb2-7"><a href="#cb2-7"></a>                           <span class="dt">control =</span> control<span class="op">$</span>stdDev) </span>
+<span id="cb2-8"><a href="#cb2-8"></a></span>
+<span id="cb2-9"><a href="#cb2-9"></a>TrueEfficacy &lt;-<span class="st"> </span><span class="kw">efficacyComputation</span>(PoDParams, </span>
+<span id="cb2-10"><a href="#cb2-10"></a>                                    means, </span>
+<span id="cb2-11"><a href="#cb2-11"></a>                                    standardDeviations)</span>
+<span id="cb2-12"><a href="#cb2-12"></a>TrueEfficacy</span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt; [1] 0.5336551</span></span></code></pre></div>
+</div>
+</div>
+<div id="case-count-efficacy" class="section level2">
+<h2>2. Case-count efficacy</h2>
+<div id="generation-of-vaccinated-and-control-populations" class="section level3">
+<h3>Generation of vaccinated and control populations</h3>
+<p>Vaccinated and control populations are generated using <code>generatePopulation()</code> function based on the simulation input parameters.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>vaccinated &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>(parameters<span class="op">$</span>vaccinated<span class="op">$</span>N,</span>
+<span id="cb3-2"><a href="#cb3-2"></a>                                 parameters<span class="op">$</span>vaccinated<span class="op">$</span>mean,</span>
+<span id="cb3-3"><a href="#cb3-3"></a>                                 parameters<span class="op">$</span>vaccinated<span class="op">$</span>stdDev)</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  </span>
+<span id="cb3-5"><a href="#cb3-5"></a>control &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>(parameters<span class="op">$</span>control<span class="op">$</span>N,</span>
+<span id="cb3-6"><a href="#cb3-6"></a>                                   parameters<span class="op">$</span>control<span class="op">$</span>mean,</span>
+<span id="cb3-7"><a href="#cb3-7"></a>                                   parameters<span class="op">$</span>control<span class="op">$</span>stdDev)</span>
+<span id="cb3-8"><a href="#cb3-8"></a></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt;  $ N                  : num 2000</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt;  $ mean               : num 8</span></span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb3-16"><a href="#cb3-16"></a><span class="co">#&gt;  $ titers             : num [1:2000] 5.59 8.55 10.17 3.31 8.86 ...</span></span>
+<span id="cb3-17"><a href="#cb3-17"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb3-18"><a href="#cb3-18"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb3-19"><a href="#cb3-19"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb3-20"><a href="#cb3-20"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb3-21"><a href="#cb3-21"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb3-22"><a href="#cb3-22"></a><span class="kw">str</span>(control)</span>
+<span id="cb3-23"><a href="#cb3-23"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb3-24"><a href="#cb3-24"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb3-25"><a href="#cb3-25"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb3-26"><a href="#cb3-26"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb3-27"><a href="#cb3-27"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb3-28"><a href="#cb3-28"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb3-29"><a href="#cb3-29"></a><span class="co">#&gt;  $ titers             : num [1:1000] 3.05 4.8 4.78 7.38 1.69 ...</span></span>
+<span id="cb3-30"><a href="#cb3-30"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb3-31"><a href="#cb3-31"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb3-32"><a href="#cb3-32"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb3-33"><a href="#cb3-33"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb3-34"><a href="#cb3-34"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+<div id="probability-of-disease" class="section level3">
+<h3>Probability of Disease</h3>
+<p>Probability of Disease (PoD) is assigned to each patient based on individual titer values and PoD curve parameters. Function <code>PoD()</code> and population class method <code>asignPoD()</code> are used.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>vaccinated<span class="op">$</span><span class="kw">assignPoD</span>(</span>
+<span id="cb4-2"><a href="#cb4-2"></a>  <span class="kw">PoD</span>(<span class="dt">titer =</span> vaccinated<span class="op">$</span><span class="kw">popX</span>(),</span>
+<span id="cb4-3"><a href="#cb4-3"></a>      <span class="dt">pmax =</span> PoDParams<span class="op">$</span>pmax,</span>
+<span id="cb4-4"><a href="#cb4-4"></a>      <span class="dt">et50 =</span> PoDParams<span class="op">$</span>et50,</span>
+<span id="cb4-5"><a href="#cb4-5"></a>      <span class="dt">slope =</span> PoDParams<span class="op">$</span>slope,</span>
+<span id="cb4-6"><a href="#cb4-6"></a>      <span class="dt">adjustTiters =</span> parameters<span class="op">$</span>adjustTiters,</span>
+<span id="cb4-7"><a href="#cb4-7"></a>      <span class="dt">adjustFrom =</span> parameters<span class="op">$</span>adjustFrom,</span>
+<span id="cb4-8"><a href="#cb4-8"></a>      <span class="dt">adjustTo =</span> parameters<span class="op">$</span>adjustTo)</span>
+<span id="cb4-9"><a href="#cb4-9"></a>)</span>
+<span id="cb4-10"><a href="#cb4-10"></a></span>
+<span id="cb4-11"><a href="#cb4-11"></a>control<span class="op">$</span><span class="kw">assignPoD</span>(</span>
+<span id="cb4-12"><a href="#cb4-12"></a>  <span class="kw">PoD</span>(<span class="dt">titer =</span> control<span class="op">$</span><span class="kw">popX</span>(),</span>
+<span id="cb4-13"><a href="#cb4-13"></a>      <span class="dt">pmax =</span> PoDParams<span class="op">$</span>pmax,</span>
+<span id="cb4-14"><a href="#cb4-14"></a>      <span class="dt">et50 =</span> PoDParams<span class="op">$</span>et50,</span>
+<span id="cb4-15"><a href="#cb4-15"></a>      <span class="dt">slope =</span> PoDParams<span class="op">$</span>slope,</span>
+<span id="cb4-16"><a href="#cb4-16"></a>      <span class="dt">adjustTiters =</span> parameters<span class="op">$</span>adjustTiters,</span>
+<span id="cb4-17"><a href="#cb4-17"></a>      <span class="dt">adjustFrom =</span> parameters<span class="op">$</span>adjustFrom,</span>
+<span id="cb4-18"><a href="#cb4-18"></a>      <span class="dt">adjustTo =</span> parameters<span class="op">$</span>adjustTo)</span>
+<span id="cb4-19"><a href="#cb4-19"></a>)</span>
+<span id="cb4-20"><a href="#cb4-20"></a></span>
+<span id="cb4-21"><a href="#cb4-21"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb4-22"><a href="#cb4-22"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt;  $ N                  : num 2000</span></span>
+<span id="cb4-24"><a href="#cb4-24"></a><span class="co">#&gt;  $ mean               : num 8</span></span>
+<span id="cb4-25"><a href="#cb4-25"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb4-26"><a href="#cb4-26"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb4-27"><a href="#cb4-27"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb4-28"><a href="#cb4-28"></a><span class="co">#&gt;  $ titers             : num [1:2000] 5.59 8.55 10.17 3.31 8.86 ...</span></span>
+<span id="cb4-29"><a href="#cb4-29"></a><span class="co">#&gt;  $ PoDs               : num [1:2000] 0.02487 0.00591 0.00205 0.02984 0.00484 ...</span></span>
+<span id="cb4-30"><a href="#cb4-30"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb4-31"><a href="#cb4-31"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb4-32"><a href="#cb4-32"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb4-33"><a href="#cb4-33"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb4-34"><a href="#cb4-34"></a><span class="kw">str</span>(control)</span>
+<span id="cb4-35"><a href="#cb4-35"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb4-36"><a href="#cb4-36"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb4-37"><a href="#cb4-37"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb4-38"><a href="#cb4-38"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb4-39"><a href="#cb4-39"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb4-40"><a href="#cb4-40"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb4-41"><a href="#cb4-41"></a><span class="co">#&gt;  $ titers             : num [1:1000] 3.05 4.8 4.78 7.38 1.69 ...</span></span>
+<span id="cb4-42"><a href="#cb4-42"></a><span class="co">#&gt;  $ PoDs               : num [1:1000] 0.0299 0.028 0.0281 0.0122 0.03 ...</span></span>
+<span id="cb4-43"><a href="#cb4-43"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb4-44"><a href="#cb4-44"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb4-45"><a href="#cb4-45"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb4-46"><a href="#cb4-46"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+<div id="case-count-efficacy-1" class="section level3">
+<h3>Case-count efficacy</h3>
+<p>Disease status (DS) is assigned based on the PoD of each patient. Case-count efficacy with its confidence intervals (80%, 90% and 95% level of significance) is estimated based on the DS. <code>ClinicalTrialCoverage()</code> or <code>ClinicalTrial()</code> function is used depending which CIs we want to estimate.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>CaseCountEfficacy &lt;-<span class="st"> </span><span class="kw">ClinicalTrialCoverage</span>(vaccinated,</span>
+<span id="cb5-2"><a href="#cb5-2"></a>                                           control)</span>
+<span id="cb5-3"><a href="#cb5-3"></a></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="kw">list</span>(<span class="dt">CaseCountEfficacy    =</span> CaseCountEfficacy<span class="op">$</span>efficacy,</span>
+<span id="cb5-5"><a href="#cb5-5"></a>     <span class="dt">confidenceInterval95 =</span> <span class="kw">unlist</span>(CaseCountEfficacy<span class="op">$</span>confidenceInterval95),</span>
+<span id="cb5-6"><a href="#cb5-6"></a>     <span class="dt">confidenceInterval90 =</span> <span class="kw">unlist</span>(CaseCountEfficacy<span class="op">$</span>confidenceInterval90),</span>
+<span id="cb5-7"><a href="#cb5-7"></a>     <span class="dt">confidenceInterval80 =</span> <span class="kw">unlist</span>(CaseCountEfficacy<span class="op">$</span>confidenceInterval80))</span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="co">#&gt; $CaseCountEfficacy</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="co">#&gt; [1] 0.4565217</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#&gt; </span></span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="co">#&gt; $confidenceInterval95</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a><span class="co">#&gt; lowerBound upperBound </span></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt; 0.04743002 0.68992449 </span></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt; </span></span>
+<span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt; $confidenceInterval90</span></span>
+<span id="cb5-16"><a href="#cb5-16"></a><span class="co">#&gt; lowerBound upperBound </span></span>
+<span id="cb5-17"><a href="#cb5-17"></a><span class="co">#&gt;  0.1296098  0.6606481 </span></span>
+<span id="cb5-18"><a href="#cb5-18"></a><span class="co">#&gt; </span></span>
+<span id="cb5-19"><a href="#cb5-19"></a><span class="co">#&gt; $confidenceInterval80</span></span>
+<span id="cb5-20"><a href="#cb5-20"></a><span class="co">#&gt; lowerBound upperBound </span></span>
+<span id="cb5-21"><a href="#cb5-21"></a><span class="co">#&gt;  0.2155981  0.6234474</span></span>
+<span id="cb5-22"><a href="#cb5-22"></a></span>
+<span id="cb5-23"><a href="#cb5-23"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb5-24"><a href="#cb5-24"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb5-25"><a href="#cb5-25"></a><span class="co">#&gt;  $ N                  : num 2000</span></span>
+<span id="cb5-26"><a href="#cb5-26"></a><span class="co">#&gt;  $ mean               : num 8</span></span>
+<span id="cb5-27"><a href="#cb5-27"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb5-28"><a href="#cb5-28"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb5-29"><a href="#cb5-29"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb5-30"><a href="#cb5-30"></a><span class="co">#&gt;  $ titers             : num [1:2000] 5.59 8.55 10.17 3.31 8.86 ...</span></span>
+<span id="cb5-31"><a href="#cb5-31"></a><span class="co">#&gt;  $ PoDs               : num [1:2000] 0.02487 0.00591 0.00205 0.02984 0.00484 ...</span></span>
+<span id="cb5-32"><a href="#cb5-32"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:2000] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb5-33"><a href="#cb5-33"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb5-34"><a href="#cb5-34"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb5-35"><a href="#cb5-35"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb5-36"><a href="#cb5-36"></a><span class="kw">str</span>(control)</span>
+<span id="cb5-37"><a href="#cb5-37"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb5-38"><a href="#cb5-38"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb5-39"><a href="#cb5-39"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb5-40"><a href="#cb5-40"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb5-41"><a href="#cb5-41"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb5-42"><a href="#cb5-42"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb5-43"><a href="#cb5-43"></a><span class="co">#&gt;  $ titers             : num [1:1000] 3.05 4.8 4.78 7.38 1.69 ...</span></span>
+<span id="cb5-44"><a href="#cb5-44"></a><span class="co">#&gt;  $ PoDs               : num [1:1000] 0.0299 0.028 0.0281 0.0122 0.03 ...</span></span>
+<span id="cb5-45"><a href="#cb5-45"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:1000] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb5-46"><a href="#cb5-46"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb5-47"><a href="#cb5-47"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb5-48"><a href="#cb5-48"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+</div>
+<div id="immunogenicity-sample" class="section level2">
+<h2>3. Immunogenicity sample</h2>
+<div id="diseased-and-nondiseased-populations" class="section level3">
+<h3>Diseased and nondiseased populations</h3>
+<p>Diseased (diseased) and non-diseased (nondiseased) populations are created based on the DS of each patient. <code>ExtractDiseased()</code> and <code>ExtractNondiseased</code> functions with population class methods <code>getDiseasedTiters()</code>, <code>getNondiseasedTiters()</code>, <code>getDiseasedCount()</code> and <code>getNondiseasedCount()</code> are used.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>diseasedAll &lt;-<span class="st"> </span><span class="kw">ExtractDiseased</span>(CaseCountEfficacy<span class="op">$</span>vaccinated, </span>
+<span id="cb6-2"><a href="#cb6-2"></a>                               CaseCountEfficacy<span class="op">$</span>control)</span>
+<span id="cb6-3"><a href="#cb6-3"></a>  </span>
+<span id="cb6-4"><a href="#cb6-4"></a>nondiseasedAll &lt;-<span class="st"> </span><span class="kw">ExtractNondiseased</span>(CaseCountEfficacy<span class="op">$</span>vaccinated, </span>
+<span id="cb6-5"><a href="#cb6-5"></a>                                   CaseCountEfficacy<span class="op">$</span>control)</span>
+<span id="cb6-6"><a href="#cb6-6"></a></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="kw">str</span>(diseasedAll)</span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;  $ N                  : int 48</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt;  $ mean               : num 5.53</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt;  $ stdDev             : num 1.94</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt;  $ titers             : Named num [1:48] 6.13 5.73 6.7 6.38 6.84 ...</span></span>
+<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:48] &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; ...</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:48] TRUE TRUE TRUE TRUE TRUE TRUE ...</span></span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb6-20"><a href="#cb6-20"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb6-21"><a href="#cb6-21"></a><span class="kw">str</span>(nondiseasedAll)</span>
+<span id="cb6-22"><a href="#cb6-22"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb6-23"><a href="#cb6-23"></a><span class="co">#&gt;  $ N                  : int 2952</span></span>
+<span id="cb6-24"><a href="#cb6-24"></a><span class="co">#&gt;  $ mean               : num 7.04</span></span>
+<span id="cb6-25"><a href="#cb6-25"></a><span class="co">#&gt;  $ stdDev             : num 2.43</span></span>
+<span id="cb6-26"><a href="#cb6-26"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb6-27"><a href="#cb6-27"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb6-28"><a href="#cb6-28"></a><span class="co">#&gt;  $ titers             : Named num [1:2952] 5.59 8.55 10.17 3.31 8.86 ...</span></span>
+<span id="cb6-29"><a href="#cb6-29"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:2952] &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; ...</span></span>
+<span id="cb6-30"><a href="#cb6-30"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb6-31"><a href="#cb6-31"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:2952] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb6-32"><a href="#cb6-32"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb6-33"><a href="#cb6-33"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb6-34"><a href="#cb6-34"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+<div id="immunogenicity-sample-1" class="section level3">
+<h3>Immunogenicity sample</h3>
+<p>Depending on the chosen method, a required immunogenicity sample (IS) is created out of the full population in the clinical trial.</p>
+<ul>
+<li><code>method</code> = “Full” - Immunogenicity sample is NOT created. Immunogenicity sample = whole clinical trial<br />
+</li>
+<li><code>method</code> = “Ratio” - Immunogenicity sample is created.<br />
+</li>
+<li><code>method</code> = “Fixed” - Immunogenicity sample is created.</li>
+</ul>
+<p>Then <span class="math inline">\(Nondiseased_{IS}\)</span>, <span class="math inline">\(Vaccinated_{IS}\)</span> and <span class="math inline">\(Control_{IS}\)</span> populations are identified within this immunogenicity sample.</p>
+<p>In reality, in the case of <strong>“Fixed”&quot;</strong> method patients in the Immunogenicity sample are picked before enrolling to the clinical trial thus both disease statuses (diseased and non-diseased) are possible to appear in the IS.</p>
+<p>In the case of <strong>“Ratio”&quot;</strong> method patients in the Immunogenicity sample are picked based on the number of diseased in the clinical trial and the whole Immunogenicity sample has non-diseased disease status.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>ImmunogenicitySample &lt;-<span class="st"> </span><span class="kw">BlindSampling</span>(diseasedAll,</span>
+<span id="cb7-2"><a href="#cb7-2"></a>                                      nondiseasedAll,</span>
+<span id="cb7-3"><a href="#cb7-3"></a>                                      parameters<span class="op">$</span>method)</span></code></pre></div>
+<p><strong><span class="math inline">\(Nondiseased_{IS}\)</span></strong></p>
+<p>Subjects from immunogenicity sample with “non-diseased” disease status.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">str</span>(ImmunogenicitySample<span class="op">$</span>ImmunogenicityNondiseased)  </span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="co">#&gt;  $ N                  : int 2952</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="co">#&gt;  $ mean               : num 7.04</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="co">#&gt;  $ stdDev             : num 2.43</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb8-8"><a href="#cb8-8"></a><span class="co">#&gt;  $ titers             : Named num [1:2952] 7.92 6.33 10.95 9.81 8.67 ...</span></span>
+<span id="cb8-9"><a href="#cb8-9"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:2952] &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; ...</span></span>
+<span id="cb8-10"><a href="#cb8-10"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb8-11"><a href="#cb8-11"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:2952] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb8-12"><a href="#cb8-12"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb8-13"><a href="#cb8-13"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb8-14"><a href="#cb8-14"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+<p><strong><span class="math inline">\(Vaccinated_{IS}\)</span></strong></p>
+<p>Subjects from immunogenicity sample with “vaccinated” vaccination status.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">str</span>(ImmunogenicitySample<span class="op">$</span>ImmunogenicityVaccinated)</span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="co">#&gt;  $ N                  : int 2000</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="co">#&gt;  $ mean               : num 7.99</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="co">#&gt;  $ stdDev             : num 1.98</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="co">#&gt;  $ titers             : Named num [1:2000] 7.92 6.33 10.95 9.81 8.67 ...</span></span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:2000] &quot;vacc_FALSE&quot; &quot;vacc_FALSE&quot; &quot;vacc_FALSE&quot; &quot;vacc_FALSE&quot; ...</span></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:2000] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+<p><strong><span class="math inline">\(Control_{IS}\)</span></strong></p>
+<p>Subjects from immunogenicity sample with “control” vaccination status.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">str</span>(ImmunogenicitySample<span class="op">$</span>ImmunogenicityControl)</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="co">#&gt;  $ N                  : int 1000</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="co">#&gt;  $ mean               : num 5.06</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a><span class="co">#&gt;  $ stdDev             : num 2.02</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="co">#&gt;  $ titers             : Named num [1:1000] 3.07 5.11 9.23 5.95 4.58 ...</span></span>
+<span id="cb10-9"><a href="#cb10-9"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:1000] &quot;control_FALSE&quot; &quot;control_FALSE&quot; &quot;control_FALSE&quot; &quot;control_FALSE&quot; ...</span></span>
+<span id="cb10-10"><a href="#cb10-10"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb10-11"><a href="#cb10-11"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:1000] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb10-12"><a href="#cb10-12"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb10-13"><a href="#cb10-13"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb10-14"><a href="#cb10-14"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+</div>
+<div id="podbay-efficacy" class="section level2">
+<h2>4. PoDBAY efficacy</h2>
+<p>PoDBAY efficacy follows the structure of EfficacyEstimation vignette - see <code>vignette(&quot;efficacyestimation&quot;, package = &quot;PoDBAY&quot;)</code> for further details.</p>
+<div id="pod-curve-parameters" class="section level3">
+<h3>PoD curve parameters</h3>
+<p>PoD curve is estimated (Point estimate together with confidence intervals) in three steps - further details can be found in the publication, section Methods.</p>
+<ol style="list-style-type: decimal">
+<li><p>Titers of all diseased and all non-diseased subjects are used for estimation of PoD curve parameters. Parameter estimates <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span> are obtained.</p></li>
+<li><p>Titers of all diseased and all non-diseased subjects are put together and bootstrapped. For each individual titer a probability of disease is calculated using the PoD curve with parameter values <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span>. New disease status is assigned to each titer based on the probability of disease.</p></li>
+<li><p>Titers of all new diseased and all new non-diseased subjects are used for re-estimation of PoD curve parameters. Parameter estimates <span class="math inline">\(p_{max}^{``}\)</span>, <span class="math inline">\(et_{50}^{``}\)</span> and <span class="math inline">\(\gamma^{``}\)</span> are obtained.</p></li>
+</ol>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>estimatedParameters &lt;-<span class="st"> </span><span class="kw">PoDParamEstimation</span>(diseasedAll<span class="op">$</span>titers,</span>
+<span id="cb11-2"><a href="#cb11-2"></a>                                            ImmunogenicitySample<span class="op">$</span>ImmunogenicityNondiseased<span class="op">$</span>titers,</span>
+<span id="cb11-3"><a href="#cb11-3"></a>                                            nondiseasedAll<span class="op">$</span>N,</span>
+<span id="cb11-4"><a href="#cb11-4"></a>                                            parameters<span class="op">$</span>repeatCount,</span>
+<span id="cb11-5"><a href="#cb11-5"></a>                                            <span class="dt">adjustTiters =</span> parameters<span class="op">$</span>adjustTiters,</span>
+<span id="cb11-6"><a href="#cb11-6"></a>                                            <span class="dt">adjustFrom =</span> parameters<span class="op">$</span>adjustFrom,</span>
+<span id="cb11-7"><a href="#cb11-7"></a>                                            <span class="dt">adjustTo =</span> parameters<span class="op">$</span>adjustTo)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co"># Confidence intervals</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>PoDParamsCI &lt;-<span class="st"> </span><span class="kw">PoDParamsCICoverage</span>(estimatedParameters<span class="op">$</span>results)</span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="kw">unlist</span>(PoDParamsCI)</span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt;   PmaxCILow95  PmaxCIHigh95   PmaxCILow90  PmaxCIHigh90   PmaxCILow80 </span></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt;    0.02066134    0.05089425    0.02135638    0.04454633    0.02313595 </span></span>
+<span id="cb12-6"><a href="#cb12-6"></a><span class="co">#&gt;  PmaxCIHigh80   Et50CILow95  Et50CIHigh95   Et50CILow90  Et50CIHigh90 </span></span>
+<span id="cb12-7"><a href="#cb12-7"></a><span class="co">#&gt;    0.03740940    5.25016770    8.52981399    6.17865695    8.41597546 </span></span>
+<span id="cb12-8"><a href="#cb12-8"></a><span class="co">#&gt;   Et50CILow80  Et50CIHigh80  SlopeCILow95 SlopeCIHigh95  SlopeCILow90 </span></span>
+<span id="cb12-9"><a href="#cb12-9"></a><span class="co">#&gt;    6.46806621    8.28328580    4.26560267   31.41464940    5.85036433 </span></span>
+<span id="cb12-10"><a href="#cb12-10"></a><span class="co">#&gt; SlopeCIHigh90  SlopeCILow80 SlopeCIHigh80 </span></span>
+<span id="cb12-11"><a href="#cb12-11"></a><span class="co">#&gt;   30.57352127    6.06343116   29.55021314</span></span>
+<span id="cb12-12"><a href="#cb12-12"></a></span>
+<span id="cb12-13"><a href="#cb12-13"></a><span class="co"># Point estimate</span></span>
+<span id="cb12-14"><a href="#cb12-14"></a>PoDParamsPointEst &lt;-<span class="st"> </span><span class="kw">PoDParamPointEstimation</span>(estimatedParameters<span class="op">$</span>resultsPriorReset)</span>
+<span id="cb12-15"><a href="#cb12-15"></a><span class="kw">unlist</span>(PoDParamsPointEst)</span>
+<span id="cb12-16"><a href="#cb12-16"></a><span class="co">#&gt;        pmax       slope        et50 </span></span>
+<span id="cb12-17"><a href="#cb12-17"></a><span class="co">#&gt;  0.02781535 11.26514623  7.53419999</span></span></code></pre></div>
+</div>
+<div id="podbay-efficacy-1" class="section level3">
+<h3>PoDBAY efficacy</h3>
+<p>PoDBAY Efficacy (Point estimate together with confidence intervals) is estimated - further details can be found in the publication, section Methods.</p>
+<ol style="list-style-type: decimal">
+<li>Efficacy point estimate is obtained using:
+<ul>
+<li>The point estimate of PoD curve <code>PoDParamsPointEst</code> from step 1 <code>PoD-titer relationship estimation</code></li>
+<li>Vaccinated and placebo (control) population summary statistics - mean, sd.</li>
+</ul></li>
+<li>Vaccinated and control population mean is jittered to account for uncertainty in the population mean. Using the N and standard deviation of the population we sample the mean titer of the vaccinated and control group: <span class="math inline">\(mean = m + N(0, \frac{sd}{\sqrt{n}})\)</span></li>
+<li>Efficacy set <span class="math inline">\(e^{``}\)</span> is estimated using:
+<ul>
+<li>PoD curve parameter values <span class="math inline">\(p_{max}^{``}\)</span>, <span class="math inline">\(et_{50}^{``}\)</span> and <span class="math inline">\(\gamma^{``}\)</span> from <code>estimatedParameters$results</code> from step 1 <code>PoD-titer relationship estimation</code></li>
+<li>Vaccinated and control population jittered means (<code>step 2</code>) and standard deviations</li>
+</ul></li>
+<li>Efficacy confidence intervals are estimated using quantiles of estimated efficacy set <span class="math inline">\(e^{``}\)</span> from <code>step 3</code></li>
+</ol>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="co"># Point estimate</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a>meansBlind &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="st">&quot;vaccinated&quot;</span> =<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityVaccinated<span class="op">$</span>mean,</span>
+<span id="cb13-3"><a href="#cb13-3"></a>                   <span class="st">&quot;control&quot;</span> =<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityControl<span class="op">$</span>mean)</span>
+<span id="cb13-4"><a href="#cb13-4"></a></span>
+<span id="cb13-5"><a href="#cb13-5"></a>standardDeviationsBlind  &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="st">&quot;vaccinated&quot;</span> =<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityVaccinated<span class="op">$</span>stdDev,</span>
+<span id="cb13-6"><a href="#cb13-6"></a>                                 <span class="st">&quot;control&quot;</span> =<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityControl<span class="op">$</span>stdDev)</span>
+<span id="cb13-7"><a href="#cb13-7"></a>  </span>
+<span id="cb13-8"><a href="#cb13-8"></a>EfficacyPointEst &lt;-<span class="st"> </span><span class="kw">efficacyComputation</span>(PoDParamsPointEst, meansBlind, standardDeviationsBlind)</span>
+<span id="cb13-9"><a href="#cb13-9"></a></span>
+<span id="cb13-10"><a href="#cb13-10"></a><span class="co"># PoDBAY efficacy set</span></span>
+<span id="cb13-11"><a href="#cb13-11"></a>efficacySet &lt;-<span class="st"> </span><span class="kw">PoDBAYEfficacy</span>(estimatedParameters<span class="op">$</span>results, </span>
+<span id="cb13-12"><a href="#cb13-12"></a>                             ImmunogenicitySample<span class="op">$</span>ImmunogenicityVaccinated, </span>
+<span id="cb13-13"><a href="#cb13-13"></a>                             ImmunogenicitySample<span class="op">$</span>ImmunogenicityControl,</span>
+<span id="cb13-14"><a href="#cb13-14"></a>                             <span class="dt">adjustTiters =</span> parameters<span class="op">$</span>adjustTiters,</span>
+<span id="cb13-15"><a href="#cb13-15"></a>                             <span class="dt">adjustFrom =</span> parameters<span class="op">$</span>adjustFrom,</span>
+<span id="cb13-16"><a href="#cb13-16"></a>                             <span class="dt">adjustTo =</span> parameters<span class="op">$</span>adjustTo)</span>
+<span id="cb13-17"><a href="#cb13-17"></a>  </span>
+<span id="cb13-18"><a href="#cb13-18"></a><span class="co"># PoDBAY efficacy confidence intervals </span></span>
+<span id="cb13-19"><a href="#cb13-19"></a>CI &lt;-<span class="st"> </span><span class="kw">EfficacyCICoverage</span>(efficacySet)</span>
+<span id="cb13-20"><a href="#cb13-20"></a></span>
+<span id="cb13-21"><a href="#cb13-21"></a>EfficacyPointEst</span>
+<span id="cb13-22"><a href="#cb13-22"></a><span class="co">#&gt; [1] 0.4983887</span></span>
+<span id="cb13-23"><a href="#cb13-23"></a><span class="kw">unlist</span>(CI)</span>
+<span id="cb13-24"><a href="#cb13-24"></a><span class="co">#&gt;      mean    median   CILow95  CIHigh95   CILow90  CIHigh90   CILow80  CIHigh80 </span></span>
+<span id="cb13-25"><a href="#cb13-25"></a><span class="co">#&gt; 0.4966027 0.4954539 0.3630324 0.6286025 0.3868161 0.6183307 0.3989669 0.6128655</span></span></code></pre></div>
+</div>
+</div>
+<div id="podbay-simulation---output-summary" class="section level2">
+<h2>PoDBAY Simulation - output summary</h2>
+<p>Analysis provides following results:</p>
+<ul>
+<li>True efficacy - efficacy based on the simulation inputs  </li>
+<li>Case-count efficacy with its confidence intervals<br />
+</li>
+<li>PoDBAY efficacy with its confidence intervals<br />
+</li>
+<li><span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(et_{50}\)</span> and <span class="math inline">\(\gamma\)</span> parameters of the PoD curve point estimate with its confidence intervals</li>
+</ul>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>result &lt;-<span class="st"> </span><span class="kw">list</span>(</span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="dt">TrueEfficacy =</span> TrueEfficacy,</span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="dt">CaseCountEfficacy    =</span> CaseCountEfficacy<span class="op">$</span>efficacy,</span>
+<span id="cb14-4"><a href="#cb14-4"></a>  <span class="dt">confidenceInterval95 =</span> <span class="kw">unlist</span>(CaseCountEfficacy<span class="op">$</span>confidenceInterval95),</span>
+<span id="cb14-5"><a href="#cb14-5"></a>  <span class="dt">confidenceInterval90 =</span> <span class="kw">unlist</span>(CaseCountEfficacy<span class="op">$</span>confidenceInterval90),</span>
+<span id="cb14-6"><a href="#cb14-6"></a>  <span class="dt">confidenceInterval80 =</span> <span class="kw">unlist</span>(CaseCountEfficacy<span class="op">$</span>confidenceInterval80),</span>
+<span id="cb14-7"><a href="#cb14-7"></a>  <span class="dt">EfficacyPointEst =</span> EfficacyPointEst,</span>
+<span id="cb14-8"><a href="#cb14-8"></a>  <span class="dt">efficacyCI =</span> <span class="kw">unlist</span>(CI),</span>
+<span id="cb14-9"><a href="#cb14-9"></a>  <span class="dt">PoDParamsPointEst =</span> <span class="kw">unlist</span>(PoDParamsPointEst),</span>
+<span id="cb14-10"><a href="#cb14-10"></a>  <span class="dt">PoDParamsCI =</span> <span class="kw">unlist</span>(PoDParamsCI))</span>
+<span id="cb14-11"><a href="#cb14-11"></a>  </span>
+<span id="cb14-12"><a href="#cb14-12"></a>result</span>
+<span id="cb14-13"><a href="#cb14-13"></a><span class="co">#&gt; $TrueEfficacy</span></span>
+<span id="cb14-14"><a href="#cb14-14"></a><span class="co">#&gt; [1] 0.5336551</span></span>
+<span id="cb14-15"><a href="#cb14-15"></a><span class="co">#&gt; </span></span>
+<span id="cb14-16"><a href="#cb14-16"></a><span class="co">#&gt; $CaseCountEfficacy</span></span>
+<span id="cb14-17"><a href="#cb14-17"></a><span class="co">#&gt; [1] 0.4565217</span></span>
+<span id="cb14-18"><a href="#cb14-18"></a><span class="co">#&gt; </span></span>
+<span id="cb14-19"><a href="#cb14-19"></a><span class="co">#&gt; $confidenceInterval95</span></span>
+<span id="cb14-20"><a href="#cb14-20"></a><span class="co">#&gt; lowerBound upperBound </span></span>
+<span id="cb14-21"><a href="#cb14-21"></a><span class="co">#&gt; 0.04743002 0.68992449 </span></span>
+<span id="cb14-22"><a href="#cb14-22"></a><span class="co">#&gt; </span></span>
+<span id="cb14-23"><a href="#cb14-23"></a><span class="co">#&gt; $confidenceInterval90</span></span>
+<span id="cb14-24"><a href="#cb14-24"></a><span class="co">#&gt; lowerBound upperBound </span></span>
+<span id="cb14-25"><a href="#cb14-25"></a><span class="co">#&gt;  0.1296098  0.6606481 </span></span>
+<span id="cb14-26"><a href="#cb14-26"></a><span class="co">#&gt; </span></span>
+<span id="cb14-27"><a href="#cb14-27"></a><span class="co">#&gt; $confidenceInterval80</span></span>
+<span id="cb14-28"><a href="#cb14-28"></a><span class="co">#&gt; lowerBound upperBound </span></span>
+<span id="cb14-29"><a href="#cb14-29"></a><span class="co">#&gt;  0.2155981  0.6234474 </span></span>
+<span id="cb14-30"><a href="#cb14-30"></a><span class="co">#&gt; </span></span>
+<span id="cb14-31"><a href="#cb14-31"></a><span class="co">#&gt; $EfficacyPointEst</span></span>
+<span id="cb14-32"><a href="#cb14-32"></a><span class="co">#&gt; [1] 0.4983887</span></span>
+<span id="cb14-33"><a href="#cb14-33"></a><span class="co">#&gt; </span></span>
+<span id="cb14-34"><a href="#cb14-34"></a><span class="co">#&gt; $efficacyCI</span></span>
+<span id="cb14-35"><a href="#cb14-35"></a><span class="co">#&gt;      mean    median   CILow95  CIHigh95   CILow90  CIHigh90   CILow80  CIHigh80 </span></span>
+<span id="cb14-36"><a href="#cb14-36"></a><span class="co">#&gt; 0.4966027 0.4954539 0.3630324 0.6286025 0.3868161 0.6183307 0.3989669 0.6128655 </span></span>
+<span id="cb14-37"><a href="#cb14-37"></a><span class="co">#&gt; </span></span>
+<span id="cb14-38"><a href="#cb14-38"></a><span class="co">#&gt; $PoDParamsPointEst</span></span>
+<span id="cb14-39"><a href="#cb14-39"></a><span class="co">#&gt;        pmax       slope        et50 </span></span>
+<span id="cb14-40"><a href="#cb14-40"></a><span class="co">#&gt;  0.02781535 11.26514623  7.53419999 </span></span>
+<span id="cb14-41"><a href="#cb14-41"></a><span class="co">#&gt; </span></span>
+<span id="cb14-42"><a href="#cb14-42"></a><span class="co">#&gt; $PoDParamsCI</span></span>
+<span id="cb14-43"><a href="#cb14-43"></a><span class="co">#&gt;   PmaxCILow95  PmaxCIHigh95   PmaxCILow90  PmaxCIHigh90   PmaxCILow80 </span></span>
+<span id="cb14-44"><a href="#cb14-44"></a><span class="co">#&gt;    0.02066134    0.05089425    0.02135638    0.04454633    0.02313595 </span></span>
+<span id="cb14-45"><a href="#cb14-45"></a><span class="co">#&gt;  PmaxCIHigh80   Et50CILow95  Et50CIHigh95   Et50CILow90  Et50CIHigh90 </span></span>
+<span id="cb14-46"><a href="#cb14-46"></a><span class="co">#&gt;    0.03740940    5.25016770    8.52981399    6.17865695    8.41597546 </span></span>
+<span id="cb14-47"><a href="#cb14-47"></a><span class="co">#&gt;   Et50CILow80  Et50CIHigh80  SlopeCILow95 SlopeCIHigh95  SlopeCILow90 </span></span>
+<span id="cb14-48"><a href="#cb14-48"></a><span class="co">#&gt;    6.46806621    8.28328580    4.26560267   31.41464940    5.85036433 </span></span>
+<span id="cb14-49"><a href="#cb14-49"></a><span class="co">#&gt; SlopeCIHigh90  SlopeCILow80 SlopeCIHigh80 </span></span>
+<span id="cb14-50"><a href="#cb14-50"></a><span class="co">#&gt;   30.57352127    6.06343116   29.55021314</span></span></code></pre></div>
+</div>
+<div id="appendix" class="section level1">
+<h1>Appendix</h1>
+<p>In a special case when serum samples at baseline and after vaccination are collected and assayed only in a subset of subjects (“immunogenicity sample/ subset”) and the assay value of titer is obtained also for all disease cases at the same time points, the general method for PoD curve estimation described above can be extended. Further details can be found in the publication Appendix A. Details about the PoD curve estimation can be found in the <code>vignette(&quot;efficacyestimation&quot;, package = &quot;PoDBAY&quot;)</code> Appendix.</p>
+<p>If you are interested in running the simulation with this setup, change the <code>method</code> parameter in the simulations parameter input and run the simulation. The only change would be that immunogenicity sample is created and PoD curve is estimated accordingly inside the simulations. The analysis steps remain the same.</p>
+<div id="simulation-parameter-inputs-1" class="section level3">
+<h3>Simulation parameter inputs</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>vaccinated &lt;-<span class="st"> </span><span class="kw">list</span>()</span>
+<span id="cb15-2"><a href="#cb15-2"></a>vaccinated<span class="op">$</span>N =<span class="st"> </span><span class="dv">2000</span></span>
+<span id="cb15-3"><a href="#cb15-3"></a>vaccinated<span class="op">$</span>mean =<span class="st"> </span><span class="dv">8</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a>vaccinated<span class="op">$</span>stdDev =<span class="st"> </span><span class="dv">2</span></span>
+<span id="cb15-5"><a href="#cb15-5"></a></span>
+<span id="cb15-6"><a href="#cb15-6"></a>control &lt;-<span class="st"> </span><span class="kw">list</span>()</span>
+<span id="cb15-7"><a href="#cb15-7"></a>control<span class="op">$</span>N =<span class="st"> </span><span class="dv">1000</span></span>
+<span id="cb15-8"><a href="#cb15-8"></a>control<span class="op">$</span>mean =<span class="st"> </span><span class="dv">5</span></span>
+<span id="cb15-9"><a href="#cb15-9"></a>control<span class="op">$</span>stdDev =<span class="st"> </span><span class="dv">2</span></span>
+<span id="cb15-10"><a href="#cb15-10"></a></span>
+<span id="cb15-11"><a href="#cb15-11"></a>PoDParams<span class="op">$</span>pmax =<span class="st"> </span><span class="fl">0.03</span></span>
+<span id="cb15-12"><a href="#cb15-12"></a>PoDParams<span class="op">$</span>et50 =<span class="st"> </span><span class="dv">7</span></span>
+<span id="cb15-13"><a href="#cb15-13"></a>PoDParams<span class="op">$</span>slope =<span class="st"> </span><span class="dv">7</span></span>
+<span id="cb15-14"><a href="#cb15-14"></a>  </span>
+<span id="cb15-15"><a href="#cb15-15"></a><span class="co">#methods: &quot;Full&quot;, &quot;Ratio&quot;, &quot;Fixed&quot;</span></span>
+<span id="cb15-16"><a href="#cb15-16"></a>  <span class="co"># method &lt;- list(name = &quot;Full&quot;,</span></span>
+<span id="cb15-17"><a href="#cb15-17"></a>  <span class="co">#                value = NA)</span></span>
+<span id="cb15-18"><a href="#cb15-18"></a>  </span>
+<span id="cb15-19"><a href="#cb15-19"></a>  <span class="co"># method &lt;- list(name = &quot;Ratio&quot;,</span></span>
+<span id="cb15-20"><a href="#cb15-20"></a>  <span class="co">#                value = 4)</span></span>
+<span id="cb15-21"><a href="#cb15-21"></a>  </span>
+<span id="cb15-22"><a href="#cb15-22"></a>  method &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">name =</span> <span class="st">&quot;Fixed&quot;</span>,</span>
+<span id="cb15-23"><a href="#cb15-23"></a>                 <span class="dt">value =</span> <span class="dv">300</span>)</span>
+<span id="cb15-24"><a href="#cb15-24"></a>  </span>
+<span id="cb15-25"><a href="#cb15-25"></a>parameters &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">vaccinated =</span> vaccinated,</span>
+<span id="cb15-26"><a href="#cb15-26"></a>                   <span class="dt">control =</span> control,</span>
+<span id="cb15-27"><a href="#cb15-27"></a>                   <span class="dt">PoDParams =</span> PoDParams,</span>
+<span id="cb15-28"><a href="#cb15-28"></a>                   <span class="dt">method =</span> method,</span>
+<span id="cb15-29"><a href="#cb15-29"></a>                   <span class="dt">repeatCount =</span> <span class="dv">50</span>,</span>
+<span id="cb15-30"><a href="#cb15-30"></a>                   <span class="dt">adjustTiters =</span> <span class="ot">FALSE</span>,</span>
+<span id="cb15-31"><a href="#cb15-31"></a>                   <span class="dt">adjustFrom =</span> <span class="ot">NA</span>,</span>
+<span id="cb15-32"><a href="#cb15-32"></a>                   <span class="dt">adjustTo =</span> <span class="ot">NA</span>)</span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

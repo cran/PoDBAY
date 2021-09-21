@@ -1,0 +1,225 @@
+---
+title: "PoDBAY population class"
+author: "Pavel Fiser (MSD), Julie Dudasova (MSD)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{population}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(dplyr)
+library(PoDBAY)
+set.seed(1)
+```
+
+This document describes how to create a population class object using PoDBAY package. Population class is used across the vignettes and package functions (see `vignette("efficacyestimation", package = "PoDBAY")` and `vignette("simulation", package = "PoDBAY")`) and it allows the user utilize the different populations, e.g. vaccinated, control, diseased, nondiseased.  
+
+For creation of any population class object `generatePopulation` function is used. The goal of this document is to show:
+
+* Creation of empty population class object \
+* Example on how to create population class object with certain characteristics \
+* Application of population class methods \ 
+* How to convert patient level data from clinical trials into the population class object
+
+
+
+## Empty population class object
+The easiest application of the population class is to generate an empty population class object i.e. population class object with no characteristics which can later be adjusted. 
+
+```{r}
+populationEmpty <- generatePopulation()
+populationEmpty
+```
+
+## Non-empty population class object
+Sometimes we want to generate a population class object based on the summary statistics (N, mean, sd). For example, this approach can be used when creating population class objects in the simulations - see `vignette("simulation", package = "PoDBAY")` for more details.
+
+In this example we create two population class objects - vaccinated and control.  
+
+**Approach 1**
+This approach is useful when we don't necessarily need to generate individual titers. 
+
+```{r}
+vaccinated <- generatePopulation()
+vaccinated$N <- 1000
+vaccinated$mean <- 7
+vaccinated$stdDev <- 2
+
+str(vaccinated)
+
+control <- generatePopulation()
+control$N <- 1000
+control$mean <- 5
+control$stdDev <- 2
+
+str(control)
+```
+
+**Approach 2**
+If the population summary statistics parameters are used as function input individual titers are generated as well (by sampling from normal distribution). These titers can be later changed if needed. 
+
+```{r}
+vaccinated <- generatePopulation(N = 1000,
+                                 mean = 7,
+                                 stdDev = 2)
+str(vaccinated)
+
+control <- generatePopulation(N = 1000,
+                                   mean = 5,
+                                   stdDev = 2)
+
+str(control)
+```
+
+
+## Application of population class methods
+The advantage of the population class is that we can apply certain predefined class methods/functions. This simplifies working with population data (in the form of population class object) substantially.  
+
+list of useful available methods: 
+
+* getTiters \
+* assignPoD \
+* getDiseasedCount \
+* getNondiseasedCount \
+* getDiseasedTiters \
+* getNondiseasedTiters 
+
+### Starting population class object
+Let's start with the two population class objects - vaccinated, control - defined above.
+
+```{r}
+vaccinated <- generatePopulation()
+vaccinated$N <- 1000
+vaccinated$mean <- 7
+vaccinated$stdDev <- 2
+
+str(vaccinated)
+
+control <- generatePopulation()
+control$N <- 1000
+control$mean <- 5
+control$stdDev <- 2
+
+str(control)
+```
+
+### getTiters
+Generate titers based on the population parameters - N, mean, stdDev - by sampling from the normal distribution.
+
+```{r, results = "hide"}
+vaccinated$getTiters()
+control$getTiters()
+```
+
+```{r}
+str(vaccinated)
+str(control)
+```
+
+### assignPoD
+Assign PoD to each subject in the population based on the provided PoD function. We will use example from `vignette("simulation", package = "PoDBAY")`.
+
+```{r}
+# Define PoD curve parameters
+PoDParams <- data.frame("pmax" = 0.05, "et50" = 5, "slope" = 7)
+
+# Assign PoD
+vaccinated$assignPoD(
+  PoD(titer = vaccinated$titers,
+      pmax = PoDParams$pmax,
+      et50 = PoDParams$et50,
+      slope = PoDParams$slope,
+      adjustTiters = FALSE
+  ))
+
+control$assignPoD(
+  PoD(titer = control$titers,
+      pmax = PoDParams$pmax,
+      et50 = PoDParams$et50,
+      slope = PoDParams$slope,
+      adjustTiters = FALSE
+  ))
+
+str(vaccinated)
+str(control)
+```
+
+Another way to assign PoD
+```{r, eval = FALSE}
+vaccinated$assignPoD(
+  rep(0.05, vaccinated$N))
+
+control$assignPoD(
+  rep(0.1, control$N))
+```
+
+### getDiseasedCount, getNondiseasedCount, getDiseasedTiters, getNondiseasedTiters 
+For using these methods, the population class object needs to have disease status assigned.
+
+To assign disease status we will use `ClinicalTrial` function form the PoDBAY package.
+```{r}
+CaseCount <- ClinicalTrial(vaccinated, control, CI = 0.95)
+
+str(vaccinated)
+str(control)
+```
+
+```{r, warning = FALSE}
+vaccinated$getDiseasedCount()
+vaccinated$getNondiseasedCount()
+vaccinated$getDiseasedTiters()
+as_tibble(vaccinated$getNondiseasedTiters())
+```
+
+## How to convert subject level data into the population class object
+We use mock-up data from a clinical trial and show how to convert them into a population class object so the data can be applied in the PoDBAY package.
+
+### Mock-up data
+Assume we have 20 patients from which 10 are vaccinated and 10 are in the control group. For each patient we have measurement of their $log_2(titer)$ values.
+
+```{r}
+dataTrial <- data.frame("patno" = 1:20,
+                        "treatment" = c(rep(FALSE, 10), rep(TRUE, 10)),
+                        "titers" = as.numeric(c(rnorm(10, 5, 2),
+                                                rnorm(10, 7, 2)))
+                        )
+
+dataTrial
+```
+
+### Conversion to population class object
+We use approach from above and convert our mock-up data into the PoDBAY population class object.
+
+```{r}
+# vaccinated
+vacc <- dataTrial %>% filter(treatment)
+
+vaccinated <- generatePopulation()
+vaccinated$N <- nrow(vacc)
+vaccinated$mean <- mean(vacc$titers)
+vaccinated$stdDev <- sd(vacc$titers)
+vaccinated$titers <- vacc$titers
+
+vaccinated
+
+# control
+ctrl <- dataTrial %>% filter(!treatment)
+
+control <- generatePopulation()
+control$N <- nrow(ctrl)
+control$mean <- mean(ctrl$titers)
+control$stdDev <- sd(ctrl$titers)
+control$titers <- ctrl$titers
+
+
+control
+
+```

@@ -1,0 +1,423 @@
+---
+title: "PoDBAY efficacy estimation"
+author: "Pavel Fiser (MSD), Julie Dudasova (MSD)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{EfficacyEstimation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(dplyr)
+library(ggplot2)
+set.seed(1234)
+```
+
+This document accompanies the "A method to estimate probability of disease and vaccine efficacy from clinical trial immunogenicity data." publication. It describes the application of PoDBAY package on the PoDBAY efficacy estimation examples using data from clinical trial(s). 
+
+The goal of PoDBAY efficacy estimation analysis is to:
+
+* Estimate PoDBAY efficacy with its confidence intervals \
+* Estimate $p_{max}$, $et_{50}$ and $\gamma$ parameters of the PoD curve point estimate with its confidence intervals \
+* Plot the PoD curve with its confidence intervals
+
+We describe two scenarios of application in PoDBAY efficacy estimation:
+
+* General case **presented in the main body of the publication** - We have full titer information about diseased and non-diseased cases from the clinical trial. See examples of inactivated influenza vaccines and zoster vaccine for further details. \
+* Non-diseased immunogenicity sample case **presented in the supplementary material of the publication** - We have full titer information about diseased subjects but only partial titer information about non-diseased subjects in the immunogenicity sample. See example of dengue vaccine for further details. 
+
+## PoDBAY efficacy introduction
+
+PoDBAY efficacy is estimated in two subsequent steps as described in the publication, section Methods.
+
+1. PoD-titer relationship estimation - using Trial A subject level data.  
+    + diseased and non-diseased subject level data are required  
+1. PoDBAY efficacy estimation - using estimated PoD curve (step 1) and Trial B population summary data. 
+    + vaccinated and control population summary statistics (N, mean, sd) are required  
+
+Notes:
+
+* Trial A should be large enough and have enough disease cases to estimate the PoD-titer relationship
+* Trial A and Trial B data could come from the same clinical trial. \
+Trial A and Trial B data could come from different phases of development. For example Trial A - phase2 and Trial B - phase 3. 
+
+## 1. PoD-titer relationship estimation - Trial A
+PoD curve is estimated (point estimate together with confidence intervals) in three steps - further details can be found in the publication, section Methods.  
+
+1. Titers of all diseased and all non-diseased subjects are used for estimation of PoD curve parameters. Parameter estimates $p_{max}^`$, $et_{50}^`$ and $\gamma^`$ are obtained. 
+
+1. Titers of all diseased and all non-diseased subjects are put together and bootstrapped. For each individual titer a probability of disease is calculated using the PoD curve with parameter values $p_{max}^`$, $et_{50}^`$ and $\gamma^`$. New disease status is assigned to each titer based on the probability of disease. 
+
+1. Titers of all new diseased and all new non-diseased subjects are used for re-estimation of PoD curve parameters. Parameter estimates $p_{max}^{``}$, $et_{50}^{``}$ and $\gamma^{``}$ are obtained.  
+
+### Data preparation
+Diseased and non-diseased subject level data are required. We'll use `PoDBAY::diseased` and `PoDBAY::nondiseased` mock-up data. Both datasets contain population summary statistics (N, mean, sd) and individual subject level data (log2 titers, disease status (DS)) 
+
+Only the individual subject level data (log2 titers, DS) are used for the PoD curve estimation as described above.  
+
+```{r TrialAData}
+library(PoDBAY)
+data(diseased)
+data(nondiseased)
+str(diseased)
+str(nondiseased)
+```
+
+Note: To convert your data in to the `population` class object use `generatePopulation()` function from PoDBAY package. See vignette `vignette("population", package = "PoDBAY")` for further details.  
+
+### PoD curve estimation
+
+Once we have our data prepared function `PoDParamEstimation` is used to estimate PoD curve parameters in three steps as described above. For more details about the usage of the function see examples in `?PoDParamEstimation()`. 
+
+```{r TrialAPoDEst, results = "hide", cache = TRUE}
+estimatedParameters <- PoDParamEstimation(diseasedTiters = diseased$titers,
+                                          nondiseasedTiters = nondiseased$titers, 
+                                          nondiseasedGenerationCount = nondiseased$N,
+                                          repeatCount = 50)
+```
+
+**Step 1: $p_{max}^`$, $et_{50}^`$ and $\gamma^`$**
+
+Results corresponding to the first step of estimation of PoD-titer relationship can be obtained via `estimatedParameters$resultsPriorReset`.
+```{r, echo = FALSE }
+as_tibble(estimatedParameters$resultsPriorReset)
+```
+
+Note that parameter estimates are the same for every `repeatCount` iteration. This is according to our expectations as the same diseased and non-diseased cases are used in every iteration in `step 1` of this example. 
+
+**Step 2: Bootstrap and re-assignment of disease status**
+Titers of all diseased and all non-diseased subjects are put together and bootstrapped. For each individual titer a probability of disease is calculated using the PoD curve with parameter values $p_{max}^`$, $et_{50}^`$ and $\gamma^`$. New disease status is assigned to each titer based on the probability of disease. 
+
+**Step 3: $p^{``}_{max}$, $et^{``}_{50}$ and $\gamma^{``}$**
+
+Results corresponding to the third step of Estimation of PoD-titer relationship can be obtained via `estimatedParameters$results`.
+```{r, echo = FALSE }
+as_tibble(estimatedParameters$results)
+```
+
+Non-parametric bootstrap described in `step 2` is applied inside the function. Therefore, the estimated PoD curve parameters differ in this case. 
+
+### PoD curve point estimate
+Parameters of PoD curve point estimate representing the PoD-titer relationship are estimated using results from 'step 1' - `estimatedParameters$resultsPriorReset`.
+
+```{r}
+PoDParamsPointEst <- PoDParamPointEstimation(estimatedParameters$resultsPriorReset)
+PoDParamsPointEst
+```
+
+### PoD curve confidence intervals
+Confidence intervals (95% level of significance) of PoD curve parameters are calculated using results from 'step 3' - `estimatedParameters$results`.
+
+```{r}
+PoDParametersCI <- PoDParamsCI(estimatedParameters$results, ci = 0.95)
+unlist(PoDParametersCI)
+```
+
+### PoD curve plot
+Using PoD curve point estimate and results from `step 3` - `estimatedParameters` PoD curve can be plotted. 
+
+```{r, fig.width = 5 }
+titers <- seq(from = 0, to = 15, by = 0.01)
+
+PoDCurve <- PoDCurvePlot(titers,
+                         estimatedParameters,
+                         ci = 0.95)
+
+PoDCurve
+```
+
+## 2. PoDBAY efficacy estimation - Trial B
+PoDBAY Efficacy (point estimate together with confidence intervals) is estimated - further details can be found in the publication, section Methods.  
+
+1. Efficacy point estimate is obtained using: 
+    * The point estimate of PoD curve `PoDParamsPointEst` from step 1 `PoD-titer relationship estimation - Trial A` 
+    * Vaccinated and control population summary statistics - mean, sd.
+1. Vaccinated and control population mean is jittered to account for uncertainty in the population mean. Using the N and standard deviation of the population we sample the mean titer of the vaccinated and control group: $mean = m + N(0, \frac{sd}{\sqrt{n}})$
+1. Efficacy set $e^{``}$ is estimated using:
+    * PoD curve parameter values $p_{max}^{``}$, $et_{50}^{``}$ and $\gamma^{``}$ from `estimatedParameters$results` from step 1 `PoD-titer relationship estimation - Trial A`
+    * Vaccinated and control population jittered means (`step 2`) and standard deviations
+1. Efficacy confidence intervals are estimated using quantiles of estimated efficacy set $e^{``}$ from `step 3` 
+
+### Data preparation
+Vaccinated and control population summary statistics (N, mean, sd) are required. We'll use `PoDBAY::vaccinated` and `PoDBAY::control` mock-up data. Both datasets contain population summary statistics (N, mean, sd) and individual subject level log2 titers. 
+
+Only the population summary statistics (N, mean, sd) data are used for the PoDBAY efficacy estimation as described above.  
+
+```{r TrialBData}
+data(vaccinated)
+data(control)
+str(vaccinated)
+str(control)
+```
+
+Note: To convert your data in to the `population` class object use `generatePopulation()` function from PoDBAY package. See vignette `vignette("population", package = "PoDBAY")` for further details.
+
+### Efficacy point estimate
+
+Once we have our data prepared function `efficacyComputation` is used to estimate Efficacy point estimate as described above in `step 1`. 
+
+```{r EfficacyPointEstimate}
+means <- list("vaccinated" = vaccinated$mean,
+              "control" = control$mean)
+  
+standardDeviations  <- list("vaccinated" = vaccinated$stdDev,
+                            "control" = control$stdDev)
+  
+EfficacyPointEst <- efficacyComputation(PoDParamsPointEst, 
+                                        means, 
+                                        standardDeviations)
+EfficacyPointEst
+```
+
+### Efficacy set $e^{``}$
+
+Jittering of population mean from `step 2` by drawing from sampling distribution is done inside of `PoDBAYEfficacy` function. Efficacy set is estimated as described above in `step 3`
+
+```{r EfficacySet}
+efficacySet <- PoDBAYEfficacy(estimatedParameters$results, 
+                              vaccinated, 
+                              control)
+```
+
+### Efficacy confidence intervals
+Confidence intervals (95% level of significance) of PoDBAY efficacy are obtained as described above in `step 4`.
+
+```{r EfficacyCI}
+CI <- EfficacyCI(efficacySet, ci = 0.95)
+unlist(CI)
+```
+## PoDBAY efficacy - output summary
+
+Analysis provides following results:
+
+* PoDBAY efficacy point estimate with its confidence intervals (80%, 90% and 95% level of significance) \
+* $p_{max}$, $et_{50}$ and $\gamma$ parameters of the PoD curve point estimate  with its confidence intervals (80%, 90% and 95% level of significance) \
+* Plot of the PoD curve with its confidence intervals
+
+```{r, fig.width = 5 }
+result <- list(
+  EfficacyPointEst = EfficacyPointEst,
+  efficacyCI = unlist(CI),
+  PoDParamsPointEst = PoDParamsPointEst,
+  PoDParametersCI = unlist(PoDParametersCI),
+  PoDCurve = PoDCurve
+)
+  
+result
+```
+
+# Appendix 
+In a frequent case when serum samples at baseline and after vaccination are collected and assayed only in a subset of subjects (“immunogenicity sample/ subset”) and the assay value of titer is obtained also for all disease cases at the same time points, the general method for PoD curve estimation described above can be extended. Further details can be found in the publication Appendix A.
+
+## 1. PoD-titer relationship estimation 
+PoD curve is estimated (point estimate together with confidence intervals) in three steps.  
+
+1. **Titers of all non-diseased subjects are generated by random sampling with replacement from immunogenicity subset.**
+
+1. Titers of all diseased and all generated non-diseased subjects (generated in `step 1`) are used for estimation of PoD curve parameters. Parameter estimates $p_{max}^`$, $et_{50}^`$ and $\gamma^`$ are obtained. 
+
+1. Titers of all diseased and all non-diseased subjects are put together and bootstrapped. For each individual titer a probability of disease is calculated using the PoD curve with parameter values $p_{max}^`$, $et_{50}^`$ and $\gamma^`$. New disease status is assigned to each titer based on the probability of disease.
+
+1. **New immunogenicity subset is selected from all new non-diseased, such that the ratio of all diseased versus non-diseased in immunogenicity subset in new data match the ratio in original data.**
+
+1. **Titers of all new non-diseased subjects are generated by random sampling with replacement from new immunogenicity subset.**
+
+1. Titers of all new diseased and all new generated non-diseased subjects (generated in `step 5`) are used for re-estimation of PoD curve parameters. Parameter estimates $p_{max}^{``}$, $et_{50}^{``}$ and $\gamma^{``}$ are obtained. 
+
+## Non-diseased immunogenicity sample
+Assume hypothetical case where we have clinical trial data of 2,000 subjects from which only 200 subjects' plasma samples are collected and examined in the immunogenicity study. Further, out of these 2,000 we identify 35 disease cases to which we measure titers from the same time point. In the end we have titer information about 200 subjects from the immunogenicity study and 35 diseased subjects. 
+
+| Population                         | # subjects (N) | 
+|:-----------------------------------|:--------------:|
+| **Whole Trial**                    |                | 
+| All subjects                       | 2,000          |
+| Diseased                           |    35          |
+| Non-diseased                       | 1,965          | 
+|                                    |                |
+| **Measured titers**                |                |
+| Diseased                           |    35          |
+| Immunogenicity sample              |   200          |
+
+Note that in the immunogenicity sample the disease status is unknown as the sample is created before the clinical study. However, vaccination status is known.  
+
+In our example the steps would be following:
+
+1. Titers of all non-diseased subjects (N = 1,965) are generated by random sampling with replacement from immunogenicity subset (N = 200).
+
+2. Titers of all diseased (N = 35) and all **generated** non-diseased (N = 1,965) subjects are used for estimation of PoD curve parameters.
+
+3. Titers of all diseased (N = 35) and all **generated** non-diseased (N = 1,965) subjects are put together and bootstrapped (N = 2,000).
+
+4. New immunogenicity subset is selected from all new non-diseased ($N^`$ = 2000 - X), such that the ratio of all new diseased ($N^`$ = X) versus new non-diseased in immunogenicity subset in new data match the ratio in original data (ratio = 200:35). 
+
+| Population                         | # subjects ($N^`$)   | 
+|:-----------------------------------|:---------------------|
+| New diseased                       |     $X$              |
+| New non-diseased                   |     $2000 - X$       |
+| New Immunogenicity sample          | $X * \frac{200}{35}$ |
+
+5. Titers of all new non-diseased subjects are generated by random sampling with replacement from new immunogenicity subset ($N^` = X * \frac{200}{35}$)
+
+6. Titers of all new diseased ($N^` = X$) and all new **generated** non-diseased subjects ($N^` = 2000 - X$) are used for second estimation of PoD curve parameters.
+
+
+### Data preparation
+Diseased and non-diseased subject level data are required. We'll use `PoDBAY::diseased` and `PoDBAY::nondiseased` mock-up data. Both datasets contain population summary statistics (N, mean, sd) and individual subject level data (log2 titers, diseases status (DS)) 
+
+Only the individual subject level data (log2 titers, DS) are used for the PoD curve estimation as described above.  
+
+We create the immunogenicity sample from our mock-up data as described above - We start with the titer information about 200 subjects from the immunogenicity study and 35 diseased subjects. 
+
+```{r}
+data(diseased)
+data(nondiseased)
+
+# Immunogenicity sample created
+ImmunogenicitySample <- BlindSampling(diseased, nondiseased, method = list(name = "Fixed", value = 200))
+nondiseasedImmunogenicitySample <- ImmunogenicitySample$ImmunogenicityNondiseased
+
+str(diseased)
+str(nondiseasedImmunogenicitySample)
+```
+
+### PoD curve estimation
+
+Note: From now on the analysis and used functions are the same as in general case. Only the input variable change from `unifected` to `NondiseasedImmunogenicitySample`. The `nondiseasedGenerationCount` remains the same as the total number of nondiseased remains the same in the whole trial. 
+
+Once we have our data prepared, function `PoDParamEstimation` is used to estimate PoD curve parameters in six steps as described above. For more details about the usage of the function see examples in `?PoDParamEstimation()`. 
+
+```{r ApxPoDEst, results = "hide", cache = TRUE}
+estimatedParametersAP <- PoDParamEstimation(diseasedTiters = diseased$titers,
+                                            nondiseasedTiters = nondiseasedImmunogenicitySample$titers, 
+                                            nondiseasedGenerationCount = nondiseased$N,
+                                            repeatCount = 50)
+```
+
+**Step 1: $p_{max}^`$, $et_{50}^`$ and $\gamma^`$**
+
+Results corresponding to the first step of Estimation of PoD-titer relationship can be obtained via `estimatedParametersAP$resultsPriorReset`.
+```{r, echo = FALSE }
+as_tibble(estimatedParametersAP$resultsPriorReset)
+```
+
+Note that parameter estimates are now different for each `repeatCount` iteration. This is according to our expectations as titers of all non-diseased subjects are generated by random sampling with replacement from immunogenicity subset in every iteration in `step 1` of this example. 
+
+**Step 2: Data generation and re-assignment of disease status**
+
+**Step 3: $p^{``}_{max}$, $et^{``}_{50}$ and $\gamma^{``}$**
+
+Results corresponding to the sixth step of estimation of PoD-titer relationship can be obtained via `estimatedParametersAP$results`.
+```{r, echo = FALSE }
+as_tibble(estimatedParametersAP$results)
+```
+
+Non-parametric bootstrap described in `step 3` together with creation of new immunogenicity sample in `step 4-5`is applied inside the function. 
+
+### PoD curve point estimate
+Parameters of PoD curve point estimate representing the PoD-titer relationship are estimated using results from 'step 1' - `estimatedParametersAP$resultsPriorReset`.
+
+```{r}
+PoDParamsPointEst <- PoDParamPointEstimation(estimatedParametersAP$resultsPriorReset)
+PoDParamsPointEst
+```
+
+### PoD curve confidence intervals
+Confidence intervals (80%, 90% and 95% level of significance) of PoD curve parameters are calculated using results from 'step 6' - `estimatedParametersAP$results`.
+
+```{r}
+PoDParametersCI <- PoDParamsCI(estimatedParametersAP$results)
+unlist(PoDParametersCI)
+```
+
+### PoD curve plot
+Using PoD curve point estimate and results from `step 6` - `estimatedParametersAP` PoD curve can be plotted.
+
+```{r, fig.width = 5 }
+titers <- seq(from = 0, to = 15, by = 0.01)
+
+PoDCurve <- PoDCurvePlot(titers,
+                         estimatedParametersAP,
+                         ci = 0.95)
+
+PoDCurve
+```
+
+
+## 2. PoDBAY efficacy estimation - Trial B
+
+There are two possible situations:
+
+* Trial A = Trial B. Therefore both trials are the same and we have immunogenicity subset information only for both trials as described above. \
+    + **Only change would be in the data availability as for Trial B we do not have the titer information from the whole trial (N = 2,000) but only from the immunogenicity sample (N = 200). However, the PoDBAY efficacy estimation approach and analysis steps remain the same as in general case.** \
+* Trial A - we have immunogenicity subset as described above. Trial B is the same as in general case. \
+    + **No change in the PoDBAY efficacy estimation approach. Analysis steps remain the same as in general case.**
+
+We will describe the approach in the situation where Trial A = Trial B. 
+
+### Data preparation
+As stated above the only difference is in the data availability. The fact that vaccinated and control population summary statistics (N, mean, sd) are required remains the same. Therefore, we calculate summary statistics for both populations using immunogenicity subset data - created in the PoD-titer relationship estimation step.
+
+```{r AppendixTrialBData}
+# Immunogenicity sample - vaccinated
+str(ImmunogenicitySample$ImmunogenicityVaccinated)
+
+# Immunogenicity sample - control
+str(ImmunogenicitySample$ImmunogenicityControl)
+```
+
+### Efficacy point estimate
+
+```{r AppendixEfficacyPointEstimate}
+means <- list("vaccinated" = ImmunogenicitySample$ImmunogenicityVaccinated$mean,
+                   "control" = ImmunogenicitySample$ImmunogenicityControl$mean)
+  
+standardDeviations  <- list("vaccinated" = ImmunogenicitySample$ImmunogenicityVaccinated$stdDev,
+                                 "control" = ImmunogenicitySample$ImmunogenicityControl$stdDev)
+  
+EfficacyPointEst <- efficacyComputation(PoDParamsPointEst, 
+                                        means, 
+                                        standardDeviations)
+EfficacyPointEst
+```
+
+### Efficacy set $e^{``}$
+
+```{r AppendixEfficacySet}
+efficacySet <- PoDBAYEfficacy(estimatedParametersAP$results, 
+                              ImmunogenicitySample$ImmunogenicityVaccinated, 
+                              ImmunogenicitySample$ImmunogenicityControl)
+```
+
+### Efficacy confidence intervals
+
+```{r AppendixEfficacyCI}
+CI <- EfficacyCICoverage(efficacySet)
+unlist(CI)
+```
+## PoDBAY efficacy - output summary
+
+Analysis provides following results:
+
+* PoDBAY efficacy point estimate with its confidence intervals (80%, 90% and 95% level of significance) \
+* $p_{max}$, $et_{50}$ and $\gamma$ parameters of the PoD curve point estimate  with its confidence intervals (80%, 90% and 95% level of significance) \
+* Plot of the PoD curve with its confidence intervals
+
+```{r, fig.width = 5 }
+result <- list(
+  EfficacyPointEst = EfficacyPointEst,
+  efficacyCI = unlist(CI),
+  PoDParamsPointEst = PoDParamsPointEst,
+  PoDParametersCI = unlist(PoDParametersCI),
+  PoDCurve = PoDCurve
+)
+  
+result
+```
+

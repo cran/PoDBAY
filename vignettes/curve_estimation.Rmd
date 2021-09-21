@@ -1,0 +1,87 @@
+---
+title: "PoD curve point estimation using vaccine efficacy and population summary statistics"
+author: "Pavel Fiser (MSD), Julie Dudasova (MSD)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{CurveEstimation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(dplyr)
+library(ggplot2)
+library(PoDBAY)
+set.seed(1234)
+```
+
+This document describes how to estimate PoD curve parameters using PoDBAY package. This process can be applied when user doesn't have  individual level data about vaccinated and control populations, but only summary statistics data and corresponding estimatedcase-count  vaccine efficacy.
+
+The goal of this document is to show how to estimate point estimate of PoD curve parameters in two steps
+
+1. $et_{50}$ and $\gamma$ estimation
+
+Required input: 
+
+* vaccinated population - mean, standard deviation of titers
+* control population - mean, standard deviation of titers
+* reference efficacy - vaccine case-count efficacy estimate from large clinical trial (converging to the true value of efficacy)
+
+2. $p_{max}$ estimation
+
+Required input:
+
+* $et_{50}$ and $\gamma$ estimates from the step 1
+* incidence rate for low titer population - we assume it is represented by incidence rate of control population
+* control population - mean, standard deviation of titers
+
+## 1. $et_{50}$ and $\gamma$ estimation
+Function `PoDEfficacySquaredError()` is used to estimate $et_{50}$ and $\gamma$. 
+As the inputs to the function we use `vaccinated` and `control` mock-up population class objects together with artificially chosen `TrueEfficacy` parameter.
+
+Note: To convert your data in to the `population` class object use `generatePopulation()` function from PoDBAY package. See vignette `vignette("population", package = "PoDBAY")` for further details.  
+
+
+```{r}
+# Mockup vaccinated and control population class objects
+data(vaccinated)
+data(control)
+
+# Observed vaccine efficacy
+TrueEfficacy <- 0.53
+
+# PoD curve parameter estimation
+params_et50_slope <- PoDEfficacySquaredError(TrueEfficacy, 
+                                             vaccinated, 
+                                             control,
+                                             initialSlope = 6)
+params_et50_slope
+```
+
+**NOTE** 
+
+1. Estimated $et_{50}$ and $\gamma$ parameters highly depends on the initial setup of slope parameter
+2. $p_{max}$ parameter is not part of the optimization as CoP-based (PoDBAY) efficacy is not dependent on the $p_{max}$ value. Hence it needs to be estimated separately.
+
+## 2. $p_{max}$ estimation
+Once we have $et_{50}$ and $\gamma$ estimated we can proceed with $p_{max}$ estimation using `PmaxEstimation`. 
+As the inputs to the function we use estimated $et_{50}$ and $\gamma$, `control` mock-up population class object together with artificially chosen `IncidenceRate` parameter.
+
+```{r}
+# Incidence rate for low titer population 
+IncidenceRate <- 0.02
+
+# pmax estimation
+pmax <- PmaxEstimation(IncidenceRate, params_et50_slope, control)
+ 
+# combining PoD curve parameters
+PoDParams <- unlist(c(params_et50_slope, pmax))
+
+PoDParams
+```

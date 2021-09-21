@@ -1,0 +1,412 @@
+---
+title: "PoDBAY simulation"
+author: "Pavel Fiser (MSD), Julie Dudasova (MSD)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{simulation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(dplyr)
+library(ggplot2)
+set.seed(1234)
+```
+
+This document accompanies the "A method to estimate probability of disease and vaccine efficacy from clinical trial immunogenicity data." publication. It describes the application of PoDBAY package in the PoDBAY general simulation example. 
+
+The goal of PoDBAY simulation analysis is to simulate the clinical trial and validate the PoDBAY method by comparing "True" efficacy, Case-count efficacy and PoDBAY efficacy. By running the simulations we obtain following information: 
+
+* True efficacy - efficacy based on the simulation inputs \ 
+* Case-count efficacy with its confidence intervals \
+* PoDBAY efficacy with its confidence intervals \
+* $p_{max}$, $et_{50}$ and $\gamma$ parameters of the PoD curve point estimate with its confidence intervals 
+
+## PoDBAY simulation introduction
+
+PoDBAY simulation is summarized by three subsequent steps as described in the publication, section Methods.
+
+1. Assumed **true values** are assigned to PoD curve parameters ($p_{max}$, $et_{50}$ and $\gamma$) and log titer distribution parameters (mean, sd, assuming normal distribution) for vaccinated and control group. **True efficacy** is calculated based on the "true" parameter inputs.    
+1. Log titer data are generated for the whole vaccinated and control population using random sampling from true distributions. Disease status is assigned to each subject using the probability of disease defined by the true PoD curve. **Case-count efficacy** and its CIs are estimated using the count of diseased and non-diseased subjects in vaccinated and control groups, as described in section Methods.
+1. Immunogenicity sample is created based on the desired design of study. See `method` parameter in the simulation inputs part below for further information. 
+1. Individual titers of all diseased and all non-diseased subjects are used to estimate PoD curve parameters and their CIs, as described in section Methods. Using the individual titers of vaccinated and control, the probability density function parameters for vaccinated and control groups, respectively, are estimated. **CoP-based (PoDBAY) efficacy** and its CI are estimated, as described in section Methods. For further details see `vignette("efficacyestimation", package = "PoDBAY")`.
+
+Steps 2 and 3 are repeated 1,000 times (1,000 simulations). Here we describe how to setup one simulation for the example based on Scenario A from the publication, see section Results. 
+
+## 1. Simulation inputs
+
+To run a simulation, following data needs to be provided:
+
+* vaccinated population log titer distribution parameters - N, mean, standard deviation \
+* control population log titer distribution parameters - N, mean, standard deviation \
+* PoD curve parameters - $p_{max}$, $et_{50}$ and $\gamma$ \
+* `method` parameters for creating immunogenicity sample - for details see `?ImmunogenicitySubset()` and `?BlindSampling()`\
+* `repeatCount` parameter - represents size of the PoDBAY efficacy set $e^{``}$ we want to estimate. In our simulations we use `repeatCount` = 500 (in vignettes the number is set to 50 because of time constrains for vignettes building). For details see `PoDBAY efficacy estimation` section in `vignette("efficacyestimation", package = "PoDBAY")`. \ 
+* adjust titer parameters - `adjustTiters`, `adjustFrom`, `adjustTo`. For details see `?PoD()`.
+
+### Method parameter
+
+This parameter decides how the Immunogenicity sample in the clinical trial is created (if any).
+
+It is a named list with two parameters "name" and "value" which are discussed below.
+
+#### `method` = "Full" 
+* "name" = "Full"
+* "value" = NA 
+    
+No immunogenicity sample is created. **We have full titer information about diseased and non-diseased populations.** See example of inactivated influenza vaccines for further details, section Results in the publication.
+
+#### `method` = "Ratio"  
+* "name" = "Ratio"
+* "value" = $N_{nondiseased}/ N_{diseased}$, ratio of nondiseased:diseased in the immunogenicity sample (method$value:1) 
+    
+Immunogenicity sample is created. **We have full titer information about diseased but only partial titer information about nondiseased in the immunogenicity sample.**
+
+#### `method` = "Fixed"  
+* "name" = "Fixed"
+* "value" =  $N_{nondiseased}$, fixed number of nondiseased in the immunogenicity sample. 
+    
+Immunogenicity sample is created. **We have full titer information about diseased but only partial titer information about nondiseased in the immunogenicity sample.** See example of zoster vaccine and dengue vaccine for further details, section Results in the publication. 
+
+### Adjust titer parameters
+
+In some cases we might not be able to measure titer values below certain level (detection limit). In this case we might want to adjust level of titers below this detection limit to certain value. 
+
+There three parameters which needs to be set:
+
+* `adjustTiters` = TRUE or FALSE - TRUE if titer values should be adjusted
+* `adjustFrom` - detection limit. All values below detection limit will be adjusted to `adjustTo` parameter value
+* `adjustTo` - value to which titers below detection limit will be adjusted
+
+Dengue vaccine case might serve as an example where the detection limit for $log_2$ titers is set to $log_{2}10$. All $log_2$ titers below detection limit are assigned to $log_{2}5$ value. In this specific example we would set the parameters in the following way:
+
+* `adjustTiters` = TRUE 
+* `adjustFrom` = $log_{2}10$
+* `adjustTo` = $log_{2}5$
+
+
+### Simulation parameter inputs
+
+Required libraries 
+```{r, echo = FALSE}
+library(PoDBAY)
+```
+
+```{r}
+vaccinated <- list()
+vaccinated$N = 2000
+vaccinated$mean = 8
+vaccinated$stdDev = 2
+
+control <- list()
+control$N = 1000
+control$mean = 5
+control$stdDev = 2
+
+PoDParams$pmax = 0.03
+PoDParams$et50 = 7
+PoDParams$slope = 7
+  
+#methods: "Full", "Ratio", "Fixed"
+  method <- list(name = "Full",
+                 value = NA)
+  
+  # method <- list(name = "Ratio",
+  #                value = 4)
+  
+  # method <- list(name = "Fixed",
+  #                value = 300)
+  
+parameters <- list(vaccinated = vaccinated,
+                   control = control,
+                   PoDParams = PoDParams,
+                   method = method,
+                   repeatCount = 50,
+                   adjustTiters = FALSE,
+                   adjustFrom = NA,
+                   adjustTo = NA)
+```
+
+### True efficacy
+True efficacy is calculated based on the provided parameters for vaccinated and control populations and PoD curve parameters.
+
+```{r}
+PoDParams <- parameters$PoDParams
+
+means <- list(vaccinated = vaccinated$mean, 
+              control = control$mean)
+
+standardDeviations <- list(vaccinated = vaccinated$stdDev, 
+                           control = control$stdDev) 
+
+TrueEfficacy <- efficacyComputation(PoDParams, 
+                                    means, 
+                                    standardDeviations)
+TrueEfficacy
+```
+
+## 2. Case-count efficacy
+
+### Generation of vaccinated and control populations
+Vaccinated and control populations are generated using `generatePopulation()` function based on the simulation input parameters. 
+
+```{r}
+vaccinated <- generatePopulation(parameters$vaccinated$N,
+                                 parameters$vaccinated$mean,
+                                 parameters$vaccinated$stdDev)
+  
+control <- generatePopulation(parameters$control$N,
+                                   parameters$control$mean,
+                                   parameters$control$stdDev)
+
+str(vaccinated)
+str(control)
+```
+
+### Probability of Disease 
+Probability of Disease (PoD) is assigned to each patient based on individual titer values and PoD curve parameters. Function `PoD()` and population class method `asignPoD()` are used.
+
+```{r}
+vaccinated$assignPoD(
+  PoD(titer = vaccinated$popX(),
+      pmax = PoDParams$pmax,
+      et50 = PoDParams$et50,
+      slope = PoDParams$slope,
+      adjustTiters = parameters$adjustTiters,
+      adjustFrom = parameters$adjustFrom,
+      adjustTo = parameters$adjustTo)
+)
+
+control$assignPoD(
+  PoD(titer = control$popX(),
+      pmax = PoDParams$pmax,
+      et50 = PoDParams$et50,
+      slope = PoDParams$slope,
+      adjustTiters = parameters$adjustTiters,
+      adjustFrom = parameters$adjustFrom,
+      adjustTo = parameters$adjustTo)
+)
+
+str(vaccinated)
+str(control)
+```
+
+### Case-count efficacy
+Disease status (DS) is assigned based on the PoD of each patient. 
+Case-count efficacy with its confidence intervals (80%, 90% and 95% level of significance) is estimated based on the DS. `ClinicalTrialCoverage()` or `ClinicalTrial()` function is used depending which CIs we want to estimate. 
+
+```{r}
+CaseCountEfficacy <- ClinicalTrialCoverage(vaccinated,
+                                           control)
+
+list(CaseCountEfficacy    = CaseCountEfficacy$efficacy,
+     confidenceInterval95 = unlist(CaseCountEfficacy$confidenceInterval95),
+     confidenceInterval90 = unlist(CaseCountEfficacy$confidenceInterval90),
+     confidenceInterval80 = unlist(CaseCountEfficacy$confidenceInterval80))
+
+str(vaccinated)
+str(control)
+```
+
+## 3. Immunogenicity sample
+
+### Diseased and nondiseased populations
+
+Diseased (diseased) and non-diseased (nondiseased) populations are created based on the DS of each patient. `ExtractDiseased()` and `ExtractNondiseased` functions with population class methods `getDiseasedTiters()`, `getNondiseasedTiters()`, `getDiseasedCount()` and `getNondiseasedCount()` are used.
+
+```{r}
+diseasedAll <- ExtractDiseased(CaseCountEfficacy$vaccinated, 
+                               CaseCountEfficacy$control)
+  
+nondiseasedAll <- ExtractNondiseased(CaseCountEfficacy$vaccinated, 
+                                   CaseCountEfficacy$control)
+
+str(diseasedAll)
+str(nondiseasedAll)
+```
+
+### Immunogenicity sample
+
+Depending on the chosen method, a required immunogenicity sample (IS) is created out of the full population in the clinical trial. 
+
+* `method` = "Full"  - Immunogenicity sample is NOT created. Immunogenicity sample = whole clinical trial \
+* `method` = "Ratio" - Immunogenicity sample is created. \
+* `method` = "Fixed" - Immunogenicity sample is created. 
+
+Then $Nondiseased_{IS}$, $Vaccinated_{IS}$ and $Control_{IS}$ populations are identified within this immunogenicity sample. 
+
+In reality, in the case of **"Fixed""** method patients in the Immunogenicity sample are picked before enrolling to the clinical trial thus both disease statuses (diseased and non-diseased) are possible to appear in the IS. 
+
+In the case of **"Ratio""** method patients in the Immunogenicity sample are picked based on the number of diseased in the clinical trial and the whole Immunogenicity sample has non-diseased disease status. 
+
+```{r}
+ImmunogenicitySample <- BlindSampling(diseasedAll,
+                                      nondiseasedAll,
+                                      parameters$method)
+```
+
+**$Nondiseased_{IS}$**
+
+Subjects from immunogenicity sample with "non-diseased" disease status.
+
+```{r}
+str(ImmunogenicitySample$ImmunogenicityNondiseased)  
+```
+
+**$Vaccinated_{IS}$**
+
+Subjects from immunogenicity sample with "vaccinated" vaccination status.
+
+```{r}
+str(ImmunogenicitySample$ImmunogenicityVaccinated)
+```
+
+**$Control_{IS}$**
+
+Subjects from immunogenicity sample with "control" vaccination status.
+
+```{r}
+str(ImmunogenicitySample$ImmunogenicityControl)
+```
+
+## 4. PoDBAY efficacy
+PoDBAY efficacy follows the structure of EfficacyEstimation vignette - see `vignette("efficacyestimation", package = "PoDBAY")` for further details. 
+
+### PoD curve parameters 
+PoD curve is estimated (Point estimate together with confidence intervals) in three steps - further details can be found in the publication, section Methods.  
+
+1. Titers of all diseased and all non-diseased subjects are used for estimation of PoD curve parameters. Parameter estimates $p_{max}^`$, $et_{50}^`$ and $\gamma^`$ are obtained. 
+
+1. Titers of all diseased and all non-diseased subjects are put together and bootstrapped. For each individual titer a probability of disease is calculated using the PoD curve with parameter values $p_{max}^`$, $et_{50}^`$ and $\gamma^`$. New disease status is assigned to each titer based on the probability of disease. 
+
+1. Titers of all new diseased and all new non-diseased subjects are used for re-estimation of PoD curve parameters. Parameter estimates $p_{max}^{``}$, $et_{50}^{``}$ and $\gamma^{``}$ are obtained.  
+
+```{r, results = "hide", cache = TRUE}
+estimatedParameters <- PoDParamEstimation(diseasedAll$titers,
+                                            ImmunogenicitySample$ImmunogenicityNondiseased$titers,
+                                            nondiseasedAll$N,
+                                            parameters$repeatCount,
+                                            adjustTiters = parameters$adjustTiters,
+                                            adjustFrom = parameters$adjustFrom,
+                                            adjustTo = parameters$adjustTo)
+```
+
+```{r}
+# Confidence intervals
+PoDParamsCI <- PoDParamsCICoverage(estimatedParameters$results)
+unlist(PoDParamsCI)
+
+# Point estimate
+PoDParamsPointEst <- PoDParamPointEstimation(estimatedParameters$resultsPriorReset)
+unlist(PoDParamsPointEst)
+```
+
+### PoDBAY efficacy
+PoDBAY Efficacy (Point estimate together with confidence intervals) is estimated - further details can be found in the publication, section Methods.  
+
+1. Efficacy point estimate is obtained using: 
+    * The point estimate of PoD curve `PoDParamsPointEst` from step 1 `PoD-titer relationship estimation` 
+    * Vaccinated and placebo (control) population summary statistics - mean, sd.
+1. Vaccinated and control population mean is jittered to account for uncertainty in the population mean. Using the N and standard deviation of the population we sample the mean titer of the vaccinated and control group: $mean = m + N(0, \frac{sd}{\sqrt{n}})$
+1. Efficacy set $e^{``}$ is estimated using:
+    * PoD curve parameter values $p_{max}^{``}$, $et_{50}^{``}$ and $\gamma^{``}$ from `estimatedParameters$results` from step 1 `PoD-titer relationship estimation`
+    * Vaccinated and control population jittered means (`step 2`) and standard deviations
+1. Efficacy confidence intervals are estimated using quantiles of estimated efficacy set $e^{``}$ from `step 3` 
+
+```{r}
+# Point estimate
+meansBlind <- list("vaccinated" = ImmunogenicitySample$ImmunogenicityVaccinated$mean,
+                   "control" = ImmunogenicitySample$ImmunogenicityControl$mean)
+
+standardDeviationsBlind  <- list("vaccinated" = ImmunogenicitySample$ImmunogenicityVaccinated$stdDev,
+                                 "control" = ImmunogenicitySample$ImmunogenicityControl$stdDev)
+  
+EfficacyPointEst <- efficacyComputation(PoDParamsPointEst, meansBlind, standardDeviationsBlind)
+
+# PoDBAY efficacy set
+efficacySet <- PoDBAYEfficacy(estimatedParameters$results, 
+                             ImmunogenicitySample$ImmunogenicityVaccinated, 
+                             ImmunogenicitySample$ImmunogenicityControl,
+                             adjustTiters = parameters$adjustTiters,
+                             adjustFrom = parameters$adjustFrom,
+                             adjustTo = parameters$adjustTo)
+  
+# PoDBAY efficacy confidence intervals 
+CI <- EfficacyCICoverage(efficacySet)
+
+EfficacyPointEst
+unlist(CI)
+```
+
+## PoDBAY Simulation - output summary
+
+Analysis provides following results:
+
+* True efficacy - efficacy based on the simulation inputs \ 
+* Case-count efficacy with its confidence intervals \
+* PoDBAY efficacy with its confidence intervals \
+* $p_{max}$, $et_{50}$ and $\gamma$ parameters of the PoD curve point estimate with its confidence intervals 
+
+```{r, fig.width = 5 }
+result <- list(
+  TrueEfficacy = TrueEfficacy,
+  CaseCountEfficacy    = CaseCountEfficacy$efficacy,
+  confidenceInterval95 = unlist(CaseCountEfficacy$confidenceInterval95),
+  confidenceInterval90 = unlist(CaseCountEfficacy$confidenceInterval90),
+  confidenceInterval80 = unlist(CaseCountEfficacy$confidenceInterval80),
+  EfficacyPointEst = EfficacyPointEst,
+  efficacyCI = unlist(CI),
+  PoDParamsPointEst = unlist(PoDParamsPointEst),
+  PoDParamsCI = unlist(PoDParamsCI))
+  
+result
+```
+
+# Appendix
+In a special case when serum samples at baseline and after vaccination are collected and assayed only in a subset of subjects (“immunogenicity sample/ subset”) and the assay value of titer is obtained also for all disease cases at the same time points, the general method for PoD curve estimation described above can be extended. Further details can be found in the publication Appendix A. Details about the PoD curve estimation can be found in the `vignette("efficacyestimation", package = "PoDBAY")` Appendix. 
+
+If you are interested in running the simulation with this setup, change the `method` parameter in the simulations parameter input and run the simulation. The only change would be that immunogenicity sample is created and PoD curve is estimated accordingly inside the simulations. The analysis steps remain the same. 
+
+### Simulation parameter inputs
+
+```{r}
+vaccinated <- list()
+vaccinated$N = 2000
+vaccinated$mean = 8
+vaccinated$stdDev = 2
+
+control <- list()
+control$N = 1000
+control$mean = 5
+control$stdDev = 2
+
+PoDParams$pmax = 0.03
+PoDParams$et50 = 7
+PoDParams$slope = 7
+  
+#methods: "Full", "Ratio", "Fixed"
+  # method <- list(name = "Full",
+  #                value = NA)
+  
+  # method <- list(name = "Ratio",
+  #                value = 4)
+  
+  method <- list(name = "Fixed",
+                 value = 300)
+  
+parameters <- list(vaccinated = vaccinated,
+                   control = control,
+                   PoDParams = PoDParams,
+                   method = method,
+                   repeatCount = 50,
+                   adjustTiters = FALSE,
+                   adjustFrom = NA,
+                   adjustTo = NA)
+```

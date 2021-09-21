@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Pavel Fiser (MSD), Julie Dudasova (MSD)" />
+
+<meta name="date" content="2021-09-20" />
+
+<title>PoDBAY efficacy estimation</title>
+
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">PoDBAY efficacy estimation</h1>
+<h4 class="author">Pavel Fiser (MSD), Julie Dudasova (MSD)</h4>
+<h4 class="date">2021-09-20</h4>
+
+
+
+<p>This document accompanies the “A method to estimate probability of disease and vaccine efficacy from clinical trial immunogenicity data.” publication. It describes the application of PoDBAY package on the PoDBAY efficacy estimation examples using data from clinical trial(s).</p>
+<p>The goal of PoDBAY efficacy estimation analysis is to:</p>
+<ul>
+<li>Estimate PoDBAY efficacy with its confidence intervals<br />
+</li>
+<li>Estimate <span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(et_{50}\)</span> and <span class="math inline">\(\gamma\)</span> parameters of the PoD curve point estimate with its confidence intervals<br />
+</li>
+<li>Plot the PoD curve with its confidence intervals</li>
+</ul>
+<p>We describe two scenarios of application in PoDBAY efficacy estimation:</p>
+<ul>
+<li>General case <strong>presented in the main body of the publication</strong> - We have full titer information about diseased and non-diseased cases from the clinical trial. See examples of inactivated influenza vaccines and zoster vaccine for further details.<br />
+</li>
+<li>Non-diseased immunogenicity sample case <strong>presented in the supplementary material of the publication</strong> - We have full titer information about diseased subjects but only partial titer information about non-diseased subjects in the immunogenicity sample. See example of dengue vaccine for further details.</li>
+</ul>
+<div id="podbay-efficacy-introduction" class="section level2">
+<h2>PoDBAY efficacy introduction</h2>
+<p>PoDBAY efficacy is estimated in two subsequent steps as described in the publication, section Methods.</p>
+<ol style="list-style-type: decimal">
+<li>PoD-titer relationship estimation - using Trial A subject level data.
+<ul>
+<li>diseased and non-diseased subject level data are required<br />
+</li>
+</ul></li>
+<li>PoDBAY efficacy estimation - using estimated PoD curve (step 1) and Trial B population summary data.
+<ul>
+<li>vaccinated and control population summary statistics (N, mean, sd) are required</li>
+</ul></li>
+</ol>
+<p>Notes:</p>
+<ul>
+<li>Trial A should be large enough and have enough disease cases to estimate the PoD-titer relationship</li>
+<li>Trial A and Trial B data could come from the same clinical trial.<br />
+Trial A and Trial B data could come from different phases of development. For example Trial A - phase2 and Trial B - phase 3.</li>
+</ul>
+</div>
+<div id="pod-titer-relationship-estimation---trial-a" class="section level2">
+<h2>1. PoD-titer relationship estimation - Trial A</h2>
+<p>PoD curve is estimated (point estimate together with confidence intervals) in three steps - further details can be found in the publication, section Methods.</p>
+<ol style="list-style-type: decimal">
+<li><p>Titers of all diseased and all non-diseased subjects are used for estimation of PoD curve parameters. Parameter estimates <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span> are obtained.</p></li>
+<li><p>Titers of all diseased and all non-diseased subjects are put together and bootstrapped. For each individual titer a probability of disease is calculated using the PoD curve with parameter values <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span>. New disease status is assigned to each titer based on the probability of disease.</p></li>
+<li><p>Titers of all new diseased and all new non-diseased subjects are used for re-estimation of PoD curve parameters. Parameter estimates <span class="math inline">\(p_{max}^{``}\)</span>, <span class="math inline">\(et_{50}^{``}\)</span> and <span class="math inline">\(\gamma^{``}\)</span> are obtained.</p></li>
+</ol>
+<div id="data-preparation" class="section level3">
+<h3>Data preparation</h3>
+<p>Diseased and non-diseased subject level data are required. We’ll use <code>PoDBAY::diseased</code> and <code>PoDBAY::nondiseased</code> mock-up data. Both datasets contain population summary statistics (N, mean, sd) and individual subject level data (log2 titers, disease status (DS))</p>
+<p>Only the individual subject level data (log2 titers, DS) are used for the PoD curve estimation as described above.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(PoDBAY)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">data</span>(diseased)</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">data</span>(nondiseased)</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">str</span>(diseased)</span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;.GlobalEnv&quot;] with 8 fields</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="co">#&gt;  $ N                  : int 35</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="co">#&gt;  $ mean               : num 3.83</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="co">#&gt;  $ stdDev             : num 1.66</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="co">#&gt;  $ titers             : Named num [1:35] 5.59 6.07 2.43 5.84 6.29 ...</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:35] &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; ...</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:35] TRUE TRUE TRUE TRUE TRUE TRUE ...</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a><span class="kw">str</span>(nondiseased)</span>
+<span id="cb1-19"><a href="#cb1-19"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;.GlobalEnv&quot;] with 8 fields</span></span>
+<span id="cb1-20"><a href="#cb1-20"></a><span class="co">#&gt;  $ N                  : int 1965</span></span>
+<span id="cb1-21"><a href="#cb1-21"></a><span class="co">#&gt;  $ mean               : num 6.01</span></span>
+<span id="cb1-22"><a href="#cb1-22"></a><span class="co">#&gt;  $ stdDev             : num 2.3</span></span>
+<span id="cb1-23"><a href="#cb1-23"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb1-24"><a href="#cb1-24"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb1-25"><a href="#cb1-25"></a><span class="co">#&gt;  $ titers             : Named num [1:1965] 5.75 7.37 5.33 10.19 7.66 ...</span></span>
+<span id="cb1-26"><a href="#cb1-26"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:1965] &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; ...</span></span>
+<span id="cb1-27"><a href="#cb1-27"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb1-28"><a href="#cb1-28"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:1965] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb1-29"><a href="#cb1-29"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb1-30"><a href="#cb1-30"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb1-31"><a href="#cb1-31"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+<p>Note: To convert your data in to the <code>population</code> class object use <code>generatePopulation()</code> function from PoDBAY package. See vignette <code>vignette(&quot;population&quot;, package = &quot;PoDBAY&quot;)</code> for further details.</p>
+</div>
+<div id="pod-curve-estimation" class="section level3">
+<h3>PoD curve estimation</h3>
+<p>Once we have our data prepared function <code>PoDParamEstimation</code> is used to estimate PoD curve parameters in three steps as described above. For more details about the usage of the function see examples in <code>?PoDParamEstimation()</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>estimatedParameters &lt;-<span class="st"> </span><span class="kw">PoDParamEstimation</span>(<span class="dt">diseasedTiters =</span> diseased<span class="op">$</span>titers,</span>
+<span id="cb2-2"><a href="#cb2-2"></a>                                          <span class="dt">nondiseasedTiters =</span> nondiseased<span class="op">$</span>titers, </span>
+<span id="cb2-3"><a href="#cb2-3"></a>                                          <span class="dt">nondiseasedGenerationCount =</span> nondiseased<span class="op">$</span>N,</span>
+<span id="cb2-4"><a href="#cb2-4"></a>                                          <span class="dt">repeatCount =</span> <span class="dv">50</span>)</span></code></pre></div>
+<p><strong>Step 1: <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span></strong></p>
+<p>Results corresponding to the first step of estimation of PoD-titer relationship can be obtained via <code>estimatedParameters$resultsPriorReset</code>.</p>
+<pre><code>#&gt; # A tibble: 50 x 3
+#&gt;      pmax slope  et50
+#&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt;  1 0.0343  28.5  6.05
+#&gt;  2 0.0343  28.5  6.05
+#&gt;  3 0.0343  28.5  6.05
+#&gt;  4 0.0343  28.5  6.05
+#&gt;  5 0.0343  28.5  6.05
+#&gt;  6 0.0343  28.5  6.05
+#&gt;  7 0.0343  28.5  6.05
+#&gt;  8 0.0343  28.5  6.05
+#&gt;  9 0.0343  28.5  6.05
+#&gt; 10 0.0343  28.5  6.05
+#&gt; # … with 40 more rows</code></pre>
+<p>Note that parameter estimates are the same for every <code>repeatCount</code> iteration. This is according to our expectations as the same diseased and non-diseased cases are used in every iteration in <code>step 1</code> of this example.</p>
+<p><strong>Step 2: Bootstrap and re-assignment of disease status</strong> Titers of all diseased and all non-diseased subjects are put together and bootstrapped. For each individual titer a probability of disease is calculated using the PoD curve with parameter values <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span>. New disease status is assigned to each titer based on the probability of disease.</p>
+<p><strong>Step 3: <span class="math inline">\(p^{``}_{max}\)</span>, <span class="math inline">\(et^{``}_{50}\)</span> and <span class="math inline">\(\gamma^{``}\)</span></strong></p>
+<p>Results corresponding to the third step of Estimation of PoD-titer relationship can be obtained via <code>estimatedParameters$results</code>.</p>
+<pre><code>#&gt; # A tibble: 50 x 3
+#&gt;      pmax slope  et50
+#&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt;  1 0.0349  31.4  5.89
+#&gt;  2 0.0361  26.9  6.37
+#&gt;  3 0.0371  28.5  6.01
+#&gt;  4 0.0288  28.5  6.31
+#&gt;  5 0.0321  33.2  6.02
+#&gt;  6 0.0331  27.4  5.98
+#&gt;  7 0.0464  16.3  5.66
+#&gt;  8 0.0479  17.7  5.69
+#&gt;  9 0.0378  28.5  6.01
+#&gt; 10 0.0324  29.5  6.07
+#&gt; # … with 40 more rows</code></pre>
+<p>Non-parametric bootstrap described in <code>step 2</code> is applied inside the function. Therefore, the estimated PoD curve parameters differ in this case.</p>
+</div>
+<div id="pod-curve-point-estimate" class="section level3">
+<h3>PoD curve point estimate</h3>
+<p>Parameters of PoD curve point estimate representing the PoD-titer relationship are estimated using results from ‘step 1’ - <code>estimatedParameters$resultsPriorReset</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>PoDParamsPointEst &lt;-<span class="st"> </span><span class="kw">PoDParamPointEstimation</span>(estimatedParameters<span class="op">$</span>resultsPriorReset)</span>
+<span id="cb5-2"><a href="#cb5-2"></a>PoDParamsPointEst</span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="co">#&gt;            pmax    slope     et50</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#&gt; pmax 0.03430108 28.51659 6.051696</span></span></code></pre></div>
+</div>
+<div id="pod-curve-confidence-intervals" class="section level3">
+<h3>PoD curve confidence intervals</h3>
+<p>Confidence intervals (95% level of significance) of PoD curve parameters are calculated using results from ‘step 3’ - <code>estimatedParameters$results</code>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>PoDParametersCI &lt;-<span class="st"> </span><span class="kw">PoDParamsCI</span>(estimatedParameters<span class="op">$</span>results, <span class="dt">ci =</span> <span class="fl">0.95</span>)</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">unlist</span>(PoDParametersCI)</span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;   PmaxCILow  PmaxCIHigh   Et50CILow  Et50CIHigh  SlopeCILow SlopeCIHigh </span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;  0.02425859  0.04787302  5.53529308  6.36748061 12.86874466 34.17583340</span></span></code></pre></div>
+</div>
+<div id="pod-curve-plot" class="section level3">
+<h3>PoD curve plot</h3>
+<p>Using PoD curve point estimate and results from <code>step 3</code> - <code>estimatedParameters</code> PoD curve can be plotted.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>titers &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">0</span>, <span class="dt">to =</span> <span class="dv">15</span>, <span class="dt">by =</span> <span class="fl">0.01</span>)</span>
+<span id="cb7-2"><a href="#cb7-2"></a></span>
+<span id="cb7-3"><a href="#cb7-3"></a>PoDCurve &lt;-<span class="st"> </span><span class="kw">PoDCurvePlot</span>(titers,</span>
+<span id="cb7-4"><a href="#cb7-4"></a>                         estimatedParameters,</span>
+<span id="cb7-5"><a href="#cb7-5"></a>                         <span class="dt">ci =</span> <span class="fl">0.95</span>)</span>
+<span id="cb7-6"><a href="#cb7-6"></a></span>
+<span id="cb7-7"><a href="#cb7-7"></a>PoDCurve</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+</div>
+<div id="podbay-efficacy-estimation---trial-b" class="section level2">
+<h2>2. PoDBAY efficacy estimation - Trial B</h2>
+<p>PoDBAY Efficacy (point estimate together with confidence intervals) is estimated - further details can be found in the publication, section Methods.</p>
+<ol style="list-style-type: decimal">
+<li>Efficacy point estimate is obtained using:
+<ul>
+<li>The point estimate of PoD curve <code>PoDParamsPointEst</code> from step 1 <code>PoD-titer relationship estimation - Trial A</code></li>
+<li>Vaccinated and control population summary statistics - mean, sd.</li>
+</ul></li>
+<li>Vaccinated and control population mean is jittered to account for uncertainty in the population mean. Using the N and standard deviation of the population we sample the mean titer of the vaccinated and control group: <span class="math inline">\(mean = m + N(0, \frac{sd}{\sqrt{n}})\)</span></li>
+<li>Efficacy set <span class="math inline">\(e^{``}\)</span> is estimated using:
+<ul>
+<li>PoD curve parameter values <span class="math inline">\(p_{max}^{``}\)</span>, <span class="math inline">\(et_{50}^{``}\)</span> and <span class="math inline">\(\gamma^{``}\)</span> from <code>estimatedParameters$results</code> from step 1 <code>PoD-titer relationship estimation - Trial A</code></li>
+<li>Vaccinated and control population jittered means (<code>step 2</code>) and standard deviations</li>
+</ul></li>
+<li>Efficacy confidence intervals are estimated using quantiles of estimated efficacy set <span class="math inline">\(e^{``}\)</span> from <code>step 3</code></li>
+</ol>
+<div id="data-preparation-1" class="section level3">
+<h3>Data preparation</h3>
+<p>Vaccinated and control population summary statistics (N, mean, sd) are required. We’ll use <code>PoDBAY::vaccinated</code> and <code>PoDBAY::control</code> mock-up data. Both datasets contain population summary statistics (N, mean, sd) and individual subject level log2 titers.</p>
+<p>Only the population summary statistics (N, mean, sd) data are used for the PoDBAY efficacy estimation as described above.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">data</span>(vaccinated)</span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="kw">data</span>(control)</span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;.GlobalEnv&quot;] with 8 fields</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a><span class="co">#&gt;  $ mean               : num 7</span></span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb8-8"><a href="#cb8-8"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb8-9"><a href="#cb8-9"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb8-10"><a href="#cb8-10"></a><span class="co">#&gt;  $ titers             : num [1:1000] 5.75 7.37 5.33 10.19 7.66 ...</span></span>
+<span id="cb8-11"><a href="#cb8-11"></a><span class="co">#&gt;  $ PoDs               : num [1:1000] 0.0137 0.00311 0.01952 0.00034 0.00241 ...</span></span>
+<span id="cb8-12"><a href="#cb8-12"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:1000] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb8-13"><a href="#cb8-13"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb8-14"><a href="#cb8-14"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb8-15"><a href="#cb8-15"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb8-16"><a href="#cb8-16"></a><span class="kw">str</span>(control)</span>
+<span id="cb8-17"><a href="#cb8-17"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;.GlobalEnv&quot;] with 8 fields</span></span>
+<span id="cb8-18"><a href="#cb8-18"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb8-19"><a href="#cb8-19"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb8-20"><a href="#cb8-20"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb8-21"><a href="#cb8-21"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb8-22"><a href="#cb8-22"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb8-23"><a href="#cb8-23"></a><span class="co">#&gt;  $ titers             : num [1:1000] 7.27 7.22 3.26 5.42 5.14 ...</span></span>
+<span id="cb8-24"><a href="#cb8-24"></a><span class="co">#&gt;  $ PoDs               : num [1:1000] 0.00339 0.00354 0.04762 0.0181 0.02261 ...</span></span>
+<span id="cb8-25"><a href="#cb8-25"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:1000] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb8-26"><a href="#cb8-26"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb8-27"><a href="#cb8-27"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb8-28"><a href="#cb8-28"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+<p>Note: To convert your data in to the <code>population</code> class object use <code>generatePopulation()</code> function from PoDBAY package. See vignette <code>vignette(&quot;population&quot;, package = &quot;PoDBAY&quot;)</code> for further details.</p>
+</div>
+<div id="efficacy-point-estimate" class="section level3">
+<h3>Efficacy point estimate</h3>
+<p>Once we have our data prepared function <code>efficacyComputation</code> is used to estimate Efficacy point estimate as described above in <code>step 1</code>.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>means &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="st">&quot;vaccinated&quot;</span> =<span class="st"> </span>vaccinated<span class="op">$</span>mean,</span>
+<span id="cb9-2"><a href="#cb9-2"></a>              <span class="st">&quot;control&quot;</span> =<span class="st"> </span>control<span class="op">$</span>mean)</span>
+<span id="cb9-3"><a href="#cb9-3"></a>  </span>
+<span id="cb9-4"><a href="#cb9-4"></a>standardDeviations  &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="st">&quot;vaccinated&quot;</span> =<span class="st"> </span>vaccinated<span class="op">$</span>stdDev,</span>
+<span id="cb9-5"><a href="#cb9-5"></a>                            <span class="st">&quot;control&quot;</span> =<span class="st"> </span>control<span class="op">$</span>stdDev)</span>
+<span id="cb9-6"><a href="#cb9-6"></a>  </span>
+<span id="cb9-7"><a href="#cb9-7"></a>EfficacyPointEst &lt;-<span class="st"> </span><span class="kw">efficacyComputation</span>(PoDParamsPointEst, </span>
+<span id="cb9-8"><a href="#cb9-8"></a>                                        means, </span>
+<span id="cb9-9"><a href="#cb9-9"></a>                                        standardDeviations)</span>
+<span id="cb9-10"><a href="#cb9-10"></a>EfficacyPointEst</span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#&gt; [1] 0.5383405</span></span></code></pre></div>
+</div>
+<div id="efficacy-set-e" class="section level3">
+<h3>Efficacy set <span class="math inline">\(e^{``}\)</span></h3>
+<p>Jittering of population mean from <code>step 2</code> by drawing from sampling distribution is done inside of <code>PoDBAYEfficacy</code> function. Efficacy set is estimated as described above in <code>step 3</code></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>efficacySet &lt;-<span class="st"> </span><span class="kw">PoDBAYEfficacy</span>(estimatedParameters<span class="op">$</span>results, </span>
+<span id="cb10-2"><a href="#cb10-2"></a>                              vaccinated, </span>
+<span id="cb10-3"><a href="#cb10-3"></a>                              control)</span></code></pre></div>
+</div>
+<div id="efficacy-confidence-intervals" class="section level3">
+<h3>Efficacy confidence intervals</h3>
+<p>Confidence intervals (95% level of significance) of PoDBAY efficacy are obtained as described above in <code>step 4</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>CI &lt;-<span class="st"> </span><span class="kw">EfficacyCI</span>(efficacySet, <span class="dt">ci =</span> <span class="fl">0.95</span>)</span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="kw">unlist</span>(CI)</span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="co">#&gt;      mean    median     CILow    CIHigh </span></span>
+<span id="cb11-4"><a href="#cb11-4"></a><span class="co">#&gt; 0.5429269 0.5492815 0.4767003 0.6106386</span></span></code></pre></div>
+</div>
+</div>
+<div id="podbay-efficacy---output-summary" class="section level2">
+<h2>PoDBAY efficacy - output summary</h2>
+<p>Analysis provides following results:</p>
+<ul>
+<li>PoDBAY efficacy point estimate with its confidence intervals (80%, 90% and 95% level of significance)<br />
+</li>
+<li><span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(et_{50}\)</span> and <span class="math inline">\(\gamma\)</span> parameters of the PoD curve point estimate with its confidence intervals (80%, 90% and 95% level of significance)<br />
+</li>
+<li>Plot of the PoD curve with its confidence intervals</li>
+</ul>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>result &lt;-<span class="st"> </span><span class="kw">list</span>(</span>
+<span id="cb12-2"><a href="#cb12-2"></a>  <span class="dt">EfficacyPointEst =</span> EfficacyPointEst,</span>
+<span id="cb12-3"><a href="#cb12-3"></a>  <span class="dt">efficacyCI =</span> <span class="kw">unlist</span>(CI),</span>
+<span id="cb12-4"><a href="#cb12-4"></a>  <span class="dt">PoDParamsPointEst =</span> PoDParamsPointEst,</span>
+<span id="cb12-5"><a href="#cb12-5"></a>  <span class="dt">PoDParametersCI =</span> <span class="kw">unlist</span>(PoDParametersCI),</span>
+<span id="cb12-6"><a href="#cb12-6"></a>  <span class="dt">PoDCurve =</span> PoDCurve</span>
+<span id="cb12-7"><a href="#cb12-7"></a>)</span>
+<span id="cb12-8"><a href="#cb12-8"></a>  </span>
+<span id="cb12-9"><a href="#cb12-9"></a>result</span>
+<span id="cb12-10"><a href="#cb12-10"></a><span class="co">#&gt; $EfficacyPointEst</span></span>
+<span id="cb12-11"><a href="#cb12-11"></a><span class="co">#&gt; [1] 0.5383405</span></span>
+<span id="cb12-12"><a href="#cb12-12"></a><span class="co">#&gt; </span></span>
+<span id="cb12-13"><a href="#cb12-13"></a><span class="co">#&gt; $efficacyCI</span></span>
+<span id="cb12-14"><a href="#cb12-14"></a><span class="co">#&gt;      mean    median     CILow    CIHigh </span></span>
+<span id="cb12-15"><a href="#cb12-15"></a><span class="co">#&gt; 0.5429269 0.5492815 0.4767003 0.6106386 </span></span>
+<span id="cb12-16"><a href="#cb12-16"></a><span class="co">#&gt; </span></span>
+<span id="cb12-17"><a href="#cb12-17"></a><span class="co">#&gt; $PoDParamsPointEst</span></span>
+<span id="cb12-18"><a href="#cb12-18"></a><span class="co">#&gt;            pmax    slope     et50</span></span>
+<span id="cb12-19"><a href="#cb12-19"></a><span class="co">#&gt; pmax 0.03430108 28.51659 6.051696</span></span>
+<span id="cb12-20"><a href="#cb12-20"></a><span class="co">#&gt; </span></span>
+<span id="cb12-21"><a href="#cb12-21"></a><span class="co">#&gt; $PoDParametersCI</span></span>
+<span id="cb12-22"><a href="#cb12-22"></a><span class="co">#&gt;   PmaxCILow  PmaxCIHigh   Et50CILow  Et50CIHigh  SlopeCILow SlopeCIHigh </span></span>
+<span id="cb12-23"><a href="#cb12-23"></a><span class="co">#&gt;  0.02425859  0.04787302  5.53529308  6.36748061 12.86874466 34.17583340 </span></span>
+<span id="cb12-24"><a href="#cb12-24"></a><span class="co">#&gt; </span></span>
+<span id="cb12-25"><a href="#cb12-25"></a><span class="co">#&gt; $PoDCurve</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="appendix" class="section level1">
+<h1>Appendix</h1>
+<p>In a frequent case when serum samples at baseline and after vaccination are collected and assayed only in a subset of subjects (“immunogenicity sample/ subset”) and the assay value of titer is obtained also for all disease cases at the same time points, the general method for PoD curve estimation described above can be extended. Further details can be found in the publication Appendix A.</p>
+<div id="pod-titer-relationship-estimation" class="section level2">
+<h2>1. PoD-titer relationship estimation</h2>
+<p>PoD curve is estimated (point estimate together with confidence intervals) in three steps.</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Titers of all non-diseased subjects are generated by random sampling with replacement from immunogenicity subset.</strong></p></li>
+<li><p>Titers of all diseased and all generated non-diseased subjects (generated in <code>step 1</code>) are used for estimation of PoD curve parameters. Parameter estimates <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span> are obtained.</p></li>
+<li><p>Titers of all diseased and all non-diseased subjects are put together and bootstrapped. For each individual titer a probability of disease is calculated using the PoD curve with parameter values <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span>. New disease status is assigned to each titer based on the probability of disease.</p></li>
+<li><p><strong>New immunogenicity subset is selected from all new non-diseased, such that the ratio of all diseased versus non-diseased in immunogenicity subset in new data match the ratio in original data.</strong></p></li>
+<li><p><strong>Titers of all new non-diseased subjects are generated by random sampling with replacement from new immunogenicity subset.</strong></p></li>
+<li><p>Titers of all new diseased and all new generated non-diseased subjects (generated in <code>step 5</code>) are used for re-estimation of PoD curve parameters. Parameter estimates <span class="math inline">\(p_{max}^{``}\)</span>, <span class="math inline">\(et_{50}^{``}\)</span> and <span class="math inline">\(\gamma^{``}\)</span> are obtained.</p></li>
+</ol>
+</div>
+<div id="non-diseased-immunogenicity-sample" class="section level2">
+<h2>Non-diseased immunogenicity sample</h2>
+<p>Assume hypothetical case where we have clinical trial data of 2,000 subjects from which only 200 subjects’ plasma samples are collected and examined in the immunogenicity study. Further, out of these 2,000 we identify 35 disease cases to which we measure titers from the same time point. In the end we have titer information about 200 subjects from the immunogenicity study and 35 diseased subjects.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Population</th>
+<th align="center"># subjects (N)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>Whole Trial</strong></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="left">All subjects</td>
+<td align="center">2,000</td>
+</tr>
+<tr class="odd">
+<td align="left">Diseased</td>
+<td align="center">35</td>
+</tr>
+<tr class="even">
+<td align="left">Non-diseased</td>
+<td align="center">1,965</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Measured titers</strong></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="left">Diseased</td>
+<td align="center">35</td>
+</tr>
+<tr class="even">
+<td align="left">Immunogenicity sample</td>
+<td align="center">200</td>
+</tr>
+</tbody>
+</table>
+<p>Note that in the immunogenicity sample the disease status is unknown as the sample is created before the clinical study. However, vaccination status is known.</p>
+<p>In our example the steps would be following:</p>
+<ol style="list-style-type: decimal">
+<li><p>Titers of all non-diseased subjects (N = 1,965) are generated by random sampling with replacement from immunogenicity subset (N = 200).</p></li>
+<li><p>Titers of all diseased (N = 35) and all <strong>generated</strong> non-diseased (N = 1,965) subjects are used for estimation of PoD curve parameters.</p></li>
+<li><p>Titers of all diseased (N = 35) and all <strong>generated</strong> non-diseased (N = 1,965) subjects are put together and bootstrapped (N = 2,000).</p></li>
+<li><p>New immunogenicity subset is selected from all new non-diseased (<span class="math inline">\(N^`\)</span> = 2000 - X), such that the ratio of all new diseased (<span class="math inline">\(N^`\)</span> = X) versus new non-diseased in immunogenicity subset in new data match the ratio in original data (ratio = 200:35).</p></li>
+</ol>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Population</th>
+<th align="left"># subjects (<span class="math inline">\(N^`\)</span>)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">New diseased</td>
+<td align="left"><span class="math inline">\(X\)</span></td>
+</tr>
+<tr class="even">
+<td align="left">New non-diseased</td>
+<td align="left"><span class="math inline">\(2000 - X\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left">New Immunogenicity sample</td>
+<td align="left"><span class="math inline">\(X * \frac{200}{35}\)</span></td>
+</tr>
+</tbody>
+</table>
+<ol start="5" style="list-style-type: decimal">
+<li><p>Titers of all new non-diseased subjects are generated by random sampling with replacement from new immunogenicity subset (<span class="math inline">\(N^` = X * \frac{200}{35}\)</span>)</p></li>
+<li><p>Titers of all new diseased (<span class="math inline">\(N^` = X\)</span>) and all new <strong>generated</strong> non-diseased subjects (<span class="math inline">\(N^` = 2000 - X\)</span>) are used for second estimation of PoD curve parameters.</p></li>
+</ol>
+<div id="data-preparation-2" class="section level3">
+<h3>Data preparation</h3>
+<p>Diseased and non-diseased subject level data are required. We’ll use <code>PoDBAY::diseased</code> and <code>PoDBAY::nondiseased</code> mock-up data. Both datasets contain population summary statistics (N, mean, sd) and individual subject level data (log2 titers, diseases status (DS))</p>
+<p>Only the individual subject level data (log2 titers, DS) are used for the PoD curve estimation as described above.</p>
+<p>We create the immunogenicity sample from our mock-up data as described above - We start with the titer information about 200 subjects from the immunogenicity study and 35 diseased subjects.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">data</span>(diseased)</span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="kw">data</span>(nondiseased)</span>
+<span id="cb13-3"><a href="#cb13-3"></a></span>
+<span id="cb13-4"><a href="#cb13-4"></a><span class="co"># Immunogenicity sample created</span></span>
+<span id="cb13-5"><a href="#cb13-5"></a>ImmunogenicitySample &lt;-<span class="st"> </span><span class="kw">BlindSampling</span>(diseased, nondiseased, <span class="dt">method =</span> <span class="kw">list</span>(<span class="dt">name =</span> <span class="st">&quot;Fixed&quot;</span>, <span class="dt">value =</span> <span class="dv">200</span>))</span>
+<span id="cb13-6"><a href="#cb13-6"></a>nondiseasedImmunogenicitySample &lt;-<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityNondiseased</span>
+<span id="cb13-7"><a href="#cb13-7"></a></span>
+<span id="cb13-8"><a href="#cb13-8"></a><span class="kw">str</span>(diseased)</span>
+<span id="cb13-9"><a href="#cb13-9"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;.GlobalEnv&quot;] with 8 fields</span></span>
+<span id="cb13-10"><a href="#cb13-10"></a><span class="co">#&gt;  $ N                  : int 35</span></span>
+<span id="cb13-11"><a href="#cb13-11"></a><span class="co">#&gt;  $ mean               : num 3.83</span></span>
+<span id="cb13-12"><a href="#cb13-12"></a><span class="co">#&gt;  $ stdDev             : num 1.66</span></span>
+<span id="cb13-13"><a href="#cb13-13"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb13-14"><a href="#cb13-14"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb13-15"><a href="#cb13-15"></a><span class="co">#&gt;  $ titers             : Named num [1:35] 5.59 6.07 2.43 5.84 6.29 ...</span></span>
+<span id="cb13-16"><a href="#cb13-16"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:35] &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; ...</span></span>
+<span id="cb13-17"><a href="#cb13-17"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb13-18"><a href="#cb13-18"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:35] TRUE TRUE TRUE TRUE TRUE TRUE ...</span></span>
+<span id="cb13-19"><a href="#cb13-19"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb13-20"><a href="#cb13-20"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb13-21"><a href="#cb13-21"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb13-22"><a href="#cb13-22"></a><span class="kw">str</span>(nondiseasedImmunogenicitySample)</span>
+<span id="cb13-23"><a href="#cb13-23"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb13-24"><a href="#cb13-24"></a><span class="co">#&gt;  $ N                  : int 196</span></span>
+<span id="cb13-25"><a href="#cb13-25"></a><span class="co">#&gt;  $ mean               : num 5.93</span></span>
+<span id="cb13-26"><a href="#cb13-26"></a><span class="co">#&gt;  $ stdDev             : num 2.45</span></span>
+<span id="cb13-27"><a href="#cb13-27"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb13-28"><a href="#cb13-28"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb13-29"><a href="#cb13-29"></a><span class="co">#&gt;  $ titers             : Named num [1:196] 7.7 8.59 8.15 9.1 11.89 ...</span></span>
+<span id="cb13-30"><a href="#cb13-30"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:196] &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; &quot;vacc&quot; ...</span></span>
+<span id="cb13-31"><a href="#cb13-31"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb13-32"><a href="#cb13-32"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:196] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb13-33"><a href="#cb13-33"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb13-34"><a href="#cb13-34"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb13-35"><a href="#cb13-35"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+<div id="pod-curve-estimation-1" class="section level3">
+<h3>PoD curve estimation</h3>
+<p>Note: From now on the analysis and used functions are the same as in general case. Only the input variable change from <code>unifected</code> to <code>NondiseasedImmunogenicitySample</code>. The <code>nondiseasedGenerationCount</code> remains the same as the total number of nondiseased remains the same in the whole trial.</p>
+<p>Once we have our data prepared, function <code>PoDParamEstimation</code> is used to estimate PoD curve parameters in six steps as described above. For more details about the usage of the function see examples in <code>?PoDParamEstimation()</code>.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>estimatedParametersAP &lt;-<span class="st"> </span><span class="kw">PoDParamEstimation</span>(<span class="dt">diseasedTiters =</span> diseased<span class="op">$</span>titers,</span>
+<span id="cb14-2"><a href="#cb14-2"></a>                                            <span class="dt">nondiseasedTiters =</span> nondiseasedImmunogenicitySample<span class="op">$</span>titers, </span>
+<span id="cb14-3"><a href="#cb14-3"></a>                                            <span class="dt">nondiseasedGenerationCount =</span> nondiseased<span class="op">$</span>N,</span>
+<span id="cb14-4"><a href="#cb14-4"></a>                                            <span class="dt">repeatCount =</span> <span class="dv">50</span>)</span></code></pre></div>
+<p><strong>Step 1: <span class="math inline">\(p_{max}^`\)</span>, <span class="math inline">\(et_{50}^`\)</span> and <span class="math inline">\(\gamma^`\)</span></strong></p>
+<p>Results corresponding to the first step of Estimation of PoD-titer relationship can be obtained via <code>estimatedParametersAP$resultsPriorReset</code>.</p>
+<pre><code>#&gt; # A tibble: 49 x 3
+#&gt;      pmax slope  et50
+#&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt;  1 0.0324  34.3  6.05
+#&gt;  2 0.0318  34.3  6.08
+#&gt;  3 0.0322  34.3  6.08
+#&gt;  4 0.0324  34.3  6.08
+#&gt;  5 0.0315  34.3  6.10
+#&gt;  6 0.0316  34.3  6.07
+#&gt;  7 0.0325  34.3  6.09
+#&gt;  8 0.0322  34.3  6.10
+#&gt;  9 0.0316  34.3  6.09
+#&gt; 10 0.0323  34.3  6.07
+#&gt; # … with 39 more rows</code></pre>
+<p>Note that parameter estimates are now different for each <code>repeatCount</code> iteration. This is according to our expectations as titers of all non-diseased subjects are generated by random sampling with replacement from immunogenicity subset in every iteration in <code>step 1</code> of this example.</p>
+<p><strong>Step 2: Data generation and re-assignment of disease status</strong></p>
+<p><strong>Step 3: <span class="math inline">\(p^{``}_{max}\)</span>, <span class="math inline">\(et^{``}_{50}\)</span> and <span class="math inline">\(\gamma^{``}\)</span></strong></p>
+<p>Results corresponding to the sixth step of estimation of PoD-titer relationship can be obtained via <code>estimatedParametersAP$results</code>.</p>
+<pre><code>#&gt; # A tibble: 49 x 3
+#&gt;      pmax slope  et50
+#&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt;  1 0.0347 39.8   5.99
+#&gt;  2 0.0231 16.0   5.89
+#&gt;  3 0.0351 21.4   5.77
+#&gt;  4 0.0419 12.1   5.46
+#&gt;  5 0.0301 39.8   6.04
+#&gt;  6 0.0483  4.59  3.92
+#&gt;  7 0.0393 43.7   5.94
+#&gt;  8 0.0386 36.8   6.06
+#&gt;  9 0.0314 40.5   6.35
+#&gt; 10 0.0263 32.7   6.00
+#&gt; # … with 39 more rows</code></pre>
+<p>Non-parametric bootstrap described in <code>step 3</code> together with creation of new immunogenicity sample in <code>step 4-5</code>is applied inside the function.</p>
+</div>
+<div id="pod-curve-point-estimate-1" class="section level3">
+<h3>PoD curve point estimate</h3>
+<p>Parameters of PoD curve point estimate representing the PoD-titer relationship are estimated using results from ‘step 1’ - <code>estimatedParametersAP$resultsPriorReset</code>.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>PoDParamsPointEst &lt;-<span class="st"> </span><span class="kw">PoDParamPointEstimation</span>(estimatedParametersAP<span class="op">$</span>resultsPriorReset)</span>
+<span id="cb17-2"><a href="#cb17-2"></a>PoDParamsPointEst</span>
+<span id="cb17-3"><a href="#cb17-3"></a><span class="co">#&gt;            pmax    slope     et50</span></span>
+<span id="cb17-4"><a href="#cb17-4"></a><span class="co">#&gt; pmax 0.03218197 33.85696 6.085131</span></span></code></pre></div>
+</div>
+<div id="pod-curve-confidence-intervals-1" class="section level3">
+<h3>PoD curve confidence intervals</h3>
+<p>Confidence intervals (80%, 90% and 95% level of significance) of PoD curve parameters are calculated using results from ‘step 6’ - <code>estimatedParametersAP$results</code>.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>PoDParametersCI &lt;-<span class="st"> </span><span class="kw">PoDParamsCI</span>(estimatedParametersAP<span class="op">$</span>results)</span>
+<span id="cb18-2"><a href="#cb18-2"></a><span class="kw">unlist</span>(PoDParametersCI)</span>
+<span id="cb18-3"><a href="#cb18-3"></a><span class="co">#&gt;   PmaxCILow  PmaxCIHigh   Et50CILow  Et50CIHigh  SlopeCILow SlopeCIHigh </span></span>
+<span id="cb18-4"><a href="#cb18-4"></a><span class="co">#&gt;  0.02140353  0.04420208  5.36664708  6.54030103  6.63482304 43.47149473</span></span></code></pre></div>
+</div>
+<div id="pod-curve-plot-1" class="section level3">
+<h3>PoD curve plot</h3>
+<p>Using PoD curve point estimate and results from <code>step 6</code> - <code>estimatedParametersAP</code> PoD curve can be plotted.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>titers &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">0</span>, <span class="dt">to =</span> <span class="dv">15</span>, <span class="dt">by =</span> <span class="fl">0.01</span>)</span>
+<span id="cb19-2"><a href="#cb19-2"></a></span>
+<span id="cb19-3"><a href="#cb19-3"></a>PoDCurve &lt;-<span class="st"> </span><span class="kw">PoDCurvePlot</span>(titers,</span>
+<span id="cb19-4"><a href="#cb19-4"></a>                         estimatedParametersAP,</span>
+<span id="cb19-5"><a href="#cb19-5"></a>                         <span class="dt">ci =</span> <span class="fl">0.95</span>)</span>
+<span id="cb19-6"><a href="#cb19-6"></a></span>
+<span id="cb19-7"><a href="#cb19-7"></a>PoDCurve</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+</div>
+<div id="podbay-efficacy-estimation---trial-b-1" class="section level2">
+<h2>2. PoDBAY efficacy estimation - Trial B</h2>
+<p>There are two possible situations:</p>
+<ul>
+<li>Trial A = Trial B. Therefore both trials are the same and we have immunogenicity subset information only for both trials as described above.<br />
+
+<ul>
+<li><strong>Only change would be in the data availability as for Trial B we do not have the titer information from the whole trial (N = 2,000) but only from the immunogenicity sample (N = 200). However, the PoDBAY efficacy estimation approach and analysis steps remain the same as in general case.</strong><br />
+</li>
+</ul></li>
+<li>Trial A - we have immunogenicity subset as described above. Trial B is the same as in general case.<br />
+
+<ul>
+<li><strong>No change in the PoDBAY efficacy estimation approach. Analysis steps remain the same as in general case.</strong></li>
+</ul></li>
+</ul>
+<p>We will describe the approach in the situation where Trial A = Trial B.</p>
+<div id="data-preparation-3" class="section level3">
+<h3>Data preparation</h3>
+<p>As stated above the only difference is in the data availability. The fact that vaccinated and control population summary statistics (N, mean, sd) are required remains the same. Therefore, we calculate summary statistics for both populations using immunogenicity subset data - created in the PoD-titer relationship estimation step.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># Immunogenicity sample - vaccinated</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a><span class="kw">str</span>(ImmunogenicitySample<span class="op">$</span>ImmunogenicityVaccinated)</span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="co">#&gt;  $ N                  : int 97</span></span>
+<span id="cb20-5"><a href="#cb20-5"></a><span class="co">#&gt;  $ mean               : num 7.03</span></span>
+<span id="cb20-6"><a href="#cb20-6"></a><span class="co">#&gt;  $ stdDev             : num 2.34</span></span>
+<span id="cb20-7"><a href="#cb20-7"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb20-8"><a href="#cb20-8"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb20-9"><a href="#cb20-9"></a><span class="co">#&gt;  $ titers             : Named num [1:97] 7.7 8.59 8.15 9.1 11.89 ...</span></span>
+<span id="cb20-10"><a href="#cb20-10"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:97] &quot;vacc_FALSE&quot; &quot;vacc_FALSE&quot; &quot;vacc_FALSE&quot; &quot;vacc_FALSE&quot; ...</span></span>
+<span id="cb20-11"><a href="#cb20-11"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb20-12"><a href="#cb20-12"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:97] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb20-13"><a href="#cb20-13"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb20-14"><a href="#cb20-14"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb20-15"><a href="#cb20-15"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb20-16"><a href="#cb20-16"></a></span>
+<span id="cb20-17"><a href="#cb20-17"></a><span class="co"># Immunogenicity sample - control</span></span>
+<span id="cb20-18"><a href="#cb20-18"></a><span class="kw">str</span>(ImmunogenicitySample<span class="op">$</span>ImmunogenicityControl)</span>
+<span id="cb20-19"><a href="#cb20-19"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb20-20"><a href="#cb20-20"></a><span class="co">#&gt;  $ N                  : int 103</span></span>
+<span id="cb20-21"><a href="#cb20-21"></a><span class="co">#&gt;  $ mean               : num 4.73</span></span>
+<span id="cb20-22"><a href="#cb20-22"></a><span class="co">#&gt;  $ stdDev             : num 2.13</span></span>
+<span id="cb20-23"><a href="#cb20-23"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb20-24"><a href="#cb20-24"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb20-25"><a href="#cb20-25"></a><span class="co">#&gt;  $ titers             : Named num [1:103] 2.17 4.53 2.51 6.08 4.22 ...</span></span>
+<span id="cb20-26"><a href="#cb20-26"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:103] &quot;control_FALSE&quot; &quot;control_FALSE&quot; &quot;control_FALSE&quot; &quot;control_FALSE&quot; ...</span></span>
+<span id="cb20-27"><a href="#cb20-27"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb20-28"><a href="#cb20-28"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:103] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb20-29"><a href="#cb20-29"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb20-30"><a href="#cb20-30"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb20-31"><a href="#cb20-31"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+<div id="efficacy-point-estimate-1" class="section level3">
+<h3>Efficacy point estimate</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>means &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="st">&quot;vaccinated&quot;</span> =<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityVaccinated<span class="op">$</span>mean,</span>
+<span id="cb21-2"><a href="#cb21-2"></a>                   <span class="st">&quot;control&quot;</span> =<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityControl<span class="op">$</span>mean)</span>
+<span id="cb21-3"><a href="#cb21-3"></a>  </span>
+<span id="cb21-4"><a href="#cb21-4"></a>standardDeviations  &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="st">&quot;vaccinated&quot;</span> =<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityVaccinated<span class="op">$</span>stdDev,</span>
+<span id="cb21-5"><a href="#cb21-5"></a>                                 <span class="st">&quot;control&quot;</span> =<span class="st"> </span>ImmunogenicitySample<span class="op">$</span>ImmunogenicityControl<span class="op">$</span>stdDev)</span>
+<span id="cb21-6"><a href="#cb21-6"></a>  </span>
+<span id="cb21-7"><a href="#cb21-7"></a>EfficacyPointEst &lt;-<span class="st"> </span><span class="kw">efficacyComputation</span>(PoDParamsPointEst, </span>
+<span id="cb21-8"><a href="#cb21-8"></a>                                        means, </span>
+<span id="cb21-9"><a href="#cb21-9"></a>                                        standardDeviations)</span>
+<span id="cb21-10"><a href="#cb21-10"></a>EfficacyPointEst</span>
+<span id="cb21-11"><a href="#cb21-11"></a><span class="co">#&gt; [1] 0.5298448</span></span></code></pre></div>
+</div>
+<div id="efficacy-set-e-1" class="section level3">
+<h3>Efficacy set <span class="math inline">\(e^{``}\)</span></h3>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>efficacySet &lt;-<span class="st"> </span><span class="kw">PoDBAYEfficacy</span>(estimatedParametersAP<span class="op">$</span>results, </span>
+<span id="cb22-2"><a href="#cb22-2"></a>                              ImmunogenicitySample<span class="op">$</span>ImmunogenicityVaccinated, </span>
+<span id="cb22-3"><a href="#cb22-3"></a>                              ImmunogenicitySample<span class="op">$</span>ImmunogenicityControl)</span></code></pre></div>
+</div>
+<div id="efficacy-confidence-intervals-1" class="section level3">
+<h3>Efficacy confidence intervals</h3>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>CI &lt;-<span class="st"> </span><span class="kw">EfficacyCICoverage</span>(efficacySet)</span>
+<span id="cb23-2"><a href="#cb23-2"></a><span class="kw">unlist</span>(CI)</span>
+<span id="cb23-3"><a href="#cb23-3"></a><span class="co">#&gt;      mean    median   CILow95  CIHigh95   CILow90  CIHigh90   CILow80  CIHigh80 </span></span>
+<span id="cb23-4"><a href="#cb23-4"></a><span class="co">#&gt; 0.5375903 0.5419903 0.4432219 0.6231131 0.4527044 0.6106371 0.4608834 0.5999084</span></span></code></pre></div>
+</div>
+</div>
+<div id="podbay-efficacy---output-summary-1" class="section level2">
+<h2>PoDBAY efficacy - output summary</h2>
+<p>Analysis provides following results:</p>
+<ul>
+<li>PoDBAY efficacy point estimate with its confidence intervals (80%, 90% and 95% level of significance)<br />
+</li>
+<li><span class="math inline">\(p_{max}\)</span>, <span class="math inline">\(et_{50}\)</span> and <span class="math inline">\(\gamma\)</span> parameters of the PoD curve point estimate with its confidence intervals (80%, 90% and 95% level of significance)<br />
+</li>
+<li>Plot of the PoD curve with its confidence intervals</li>
+</ul>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a>result &lt;-<span class="st"> </span><span class="kw">list</span>(</span>
+<span id="cb24-2"><a href="#cb24-2"></a>  <span class="dt">EfficacyPointEst =</span> EfficacyPointEst,</span>
+<span id="cb24-3"><a href="#cb24-3"></a>  <span class="dt">efficacyCI =</span> <span class="kw">unlist</span>(CI),</span>
+<span id="cb24-4"><a href="#cb24-4"></a>  <span class="dt">PoDParamsPointEst =</span> PoDParamsPointEst,</span>
+<span id="cb24-5"><a href="#cb24-5"></a>  <span class="dt">PoDParametersCI =</span> <span class="kw">unlist</span>(PoDParametersCI),</span>
+<span id="cb24-6"><a href="#cb24-6"></a>  <span class="dt">PoDCurve =</span> PoDCurve</span>
+<span id="cb24-7"><a href="#cb24-7"></a>)</span>
+<span id="cb24-8"><a href="#cb24-8"></a>  </span>
+<span id="cb24-9"><a href="#cb24-9"></a>result</span>
+<span id="cb24-10"><a href="#cb24-10"></a><span class="co">#&gt; $EfficacyPointEst</span></span>
+<span id="cb24-11"><a href="#cb24-11"></a><span class="co">#&gt; [1] 0.5298448</span></span>
+<span id="cb24-12"><a href="#cb24-12"></a><span class="co">#&gt; </span></span>
+<span id="cb24-13"><a href="#cb24-13"></a><span class="co">#&gt; $efficacyCI</span></span>
+<span id="cb24-14"><a href="#cb24-14"></a><span class="co">#&gt;      mean    median   CILow95  CIHigh95   CILow90  CIHigh90   CILow80  CIHigh80 </span></span>
+<span id="cb24-15"><a href="#cb24-15"></a><span class="co">#&gt; 0.5375903 0.5419903 0.4432219 0.6231131 0.4527044 0.6106371 0.4608834 0.5999084 </span></span>
+<span id="cb24-16"><a href="#cb24-16"></a><span class="co">#&gt; </span></span>
+<span id="cb24-17"><a href="#cb24-17"></a><span class="co">#&gt; $PoDParamsPointEst</span></span>
+<span id="cb24-18"><a href="#cb24-18"></a><span class="co">#&gt;            pmax    slope     et50</span></span>
+<span id="cb24-19"><a href="#cb24-19"></a><span class="co">#&gt; pmax 0.03218197 33.85696 6.085131</span></span>
+<span id="cb24-20"><a href="#cb24-20"></a><span class="co">#&gt; </span></span>
+<span id="cb24-21"><a href="#cb24-21"></a><span class="co">#&gt; $PoDParametersCI</span></span>
+<span id="cb24-22"><a href="#cb24-22"></a><span class="co">#&gt;   PmaxCILow  PmaxCIHigh   Et50CILow  Et50CIHigh  SlopeCILow SlopeCIHigh </span></span>
+<span id="cb24-23"><a href="#cb24-23"></a><span class="co">#&gt;  0.02140353  0.04420208  5.36664708  6.54030103  6.63482304 43.47149473 </span></span>
+<span id="cb24-24"><a href="#cb24-24"></a><span class="co">#&gt; </span></span>
+<span id="cb24-25"><a href="#cb24-25"></a><span class="co">#&gt; $PoDCurve</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

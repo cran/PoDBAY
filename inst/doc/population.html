@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Pavel Fiser (MSD), Julie Dudasova (MSD)" />
+
+<meta name="date" content="2021-09-20" />
+
+<title>PoDBAY population class</title>
+
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">PoDBAY population class</h1>
+<h4 class="author">Pavel Fiser (MSD), Julie Dudasova (MSD)</h4>
+<h4 class="date">2021-09-20</h4>
+
+
+
+<p>This document describes how to create a population class object using PoDBAY package. Population class is used across the vignettes and package functions (see <code>vignette(&quot;efficacyestimation&quot;, package = &quot;PoDBAY&quot;)</code> and <code>vignette(&quot;simulation&quot;, package = &quot;PoDBAY&quot;)</code>) and it allows the user utilize the different populations, e.g. vaccinated, control, diseased, nondiseased.</p>
+<p>For creation of any population class object <code>generatePopulation</code> function is used. The goal of this document is to show:</p>
+<ul>
+<li>Creation of empty population class object<br />
+</li>
+<li>Example on how to create population class object with certain characteristics<br />
+</li>
+<li>Application of population class methods  </li>
+<li>How to convert patient level data from clinical trials into the population class object</li>
+</ul>
+<div id="empty-population-class-object" class="section level2">
+<h2>Empty population class object</h2>
+<p>The easiest application of the population class is to generate an empty population class object i.e. population class object with no characteristics which can later be adjusted.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>populationEmpty &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>()</span>
+<span id="cb1-2"><a href="#cb1-2"></a>populationEmpty</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#&gt; Reference class object of class &quot;Population&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="co">#&gt; Field &quot;N&quot;:</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="co">#&gt; [1] 0</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="co">#&gt; Field &quot;mean&quot;:</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="co">#&gt; [1] NA</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="co">#&gt; Field &quot;stdDev&quot;:</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="co">#&gt; [1] NA</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="co">#&gt; Field &quot;unknownDistribution&quot;:</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="co">#&gt; [1] FALSE</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="co">#&gt; Field &quot;UDFunction&quot;:</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="co">#&gt; function () </span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="co">#&gt; &lt;bytecode: 0x24d3840&gt;</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="co">#&gt; Field &quot;titers&quot;:</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a><span class="co">#&gt; numeric(0)</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a><span class="co">#&gt; Field &quot;PoDs&quot;:</span></span>
+<span id="cb1-19"><a href="#cb1-19"></a><span class="co">#&gt; numeric(0)</span></span>
+<span id="cb1-20"><a href="#cb1-20"></a><span class="co">#&gt; Field &quot;diseaseStatus&quot;:</span></span>
+<span id="cb1-21"><a href="#cb1-21"></a><span class="co">#&gt; logical(0)</span></span></code></pre></div>
+</div>
+<div id="non-empty-population-class-object" class="section level2">
+<h2>Non-empty population class object</h2>
+<p>Sometimes we want to generate a population class object based on the summary statistics (N, mean, sd). For example, this approach can be used when creating population class objects in the simulations - see <code>vignette(&quot;simulation&quot;, package = &quot;PoDBAY&quot;)</code> for more details.</p>
+<p>In this example we create two population class objects - vaccinated and control.</p>
+<p><strong>Approach 1</strong> This approach is useful when we don’t necessarily need to generate individual titers.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>vaccinated &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>()</span>
+<span id="cb2-2"><a href="#cb2-2"></a>vaccinated<span class="op">$</span>N &lt;-<span class="st"> </span><span class="dv">1000</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>vaccinated<span class="op">$</span>mean &lt;-<span class="st"> </span><span class="dv">7</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a>vaccinated<span class="op">$</span>stdDev &lt;-<span class="st"> </span><span class="dv">2</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt;  $ mean               : num 7</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;  $ titers             : num(0) </span></span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb2-15"><a href="#cb2-15"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb2-17"><a href="#cb2-17"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb2-18"><a href="#cb2-18"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb2-19"><a href="#cb2-19"></a></span>
+<span id="cb2-20"><a href="#cb2-20"></a>control &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>()</span>
+<span id="cb2-21"><a href="#cb2-21"></a>control<span class="op">$</span>N &lt;-<span class="st"> </span><span class="dv">1000</span></span>
+<span id="cb2-22"><a href="#cb2-22"></a>control<span class="op">$</span>mean &lt;-<span class="st"> </span><span class="dv">5</span></span>
+<span id="cb2-23"><a href="#cb2-23"></a>control<span class="op">$</span>stdDev &lt;-<span class="st"> </span><span class="dv">2</span></span>
+<span id="cb2-24"><a href="#cb2-24"></a></span>
+<span id="cb2-25"><a href="#cb2-25"></a><span class="kw">str</span>(control)</span>
+<span id="cb2-26"><a href="#cb2-26"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb2-27"><a href="#cb2-27"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb2-28"><a href="#cb2-28"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb2-29"><a href="#cb2-29"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb2-30"><a href="#cb2-30"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb2-31"><a href="#cb2-31"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb2-32"><a href="#cb2-32"></a><span class="co">#&gt;  $ titers             : num(0) </span></span>
+<span id="cb2-33"><a href="#cb2-33"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb2-34"><a href="#cb2-34"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb2-35"><a href="#cb2-35"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb2-36"><a href="#cb2-36"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb2-37"><a href="#cb2-37"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+<p><strong>Approach 2</strong> If the population summary statistics parameters are used as function input individual titers are generated as well (by sampling from normal distribution). These titers can be later changed if needed.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>vaccinated &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>(<span class="dt">N =</span> <span class="dv">1000</span>,</span>
+<span id="cb3-2"><a href="#cb3-2"></a>                                 <span class="dt">mean =</span> <span class="dv">7</span>,</span>
+<span id="cb3-3"><a href="#cb3-3"></a>                                 <span class="dt">stdDev =</span> <span class="dv">2</span>)</span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt;  $ mean               : num 7</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt;  $ titers             : num [1:1000] 5.75 7.37 5.33 10.19 7.66 ...</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb3-16"><a href="#cb3-16"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb3-17"><a href="#cb3-17"></a></span>
+<span id="cb3-18"><a href="#cb3-18"></a>control &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>(<span class="dt">N =</span> <span class="dv">1000</span>,</span>
+<span id="cb3-19"><a href="#cb3-19"></a>                                   <span class="dt">mean =</span> <span class="dv">5</span>,</span>
+<span id="cb3-20"><a href="#cb3-20"></a>                                   <span class="dt">stdDev =</span> <span class="dv">2</span>)</span>
+<span id="cb3-21"><a href="#cb3-21"></a></span>
+<span id="cb3-22"><a href="#cb3-22"></a><span class="kw">str</span>(control)</span>
+<span id="cb3-23"><a href="#cb3-23"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb3-24"><a href="#cb3-24"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb3-25"><a href="#cb3-25"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb3-26"><a href="#cb3-26"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb3-27"><a href="#cb3-27"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb3-28"><a href="#cb3-28"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb3-29"><a href="#cb3-29"></a><span class="co">#&gt;  $ titers             : num [1:1000] 7.27 7.22 3.26 5.42 5.14 ...</span></span>
+<span id="cb3-30"><a href="#cb3-30"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb3-31"><a href="#cb3-31"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb3-32"><a href="#cb3-32"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb3-33"><a href="#cb3-33"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb3-34"><a href="#cb3-34"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+<div id="application-of-population-class-methods" class="section level2">
+<h2>Application of population class methods</h2>
+<p>The advantage of the population class is that we can apply certain predefined class methods/functions. This simplifies working with population data (in the form of population class object) substantially.</p>
+<p>list of useful available methods:</p>
+<ul>
+<li>getTiters<br />
+</li>
+<li>assignPoD<br />
+</li>
+<li>getDiseasedCount<br />
+</li>
+<li>getNondiseasedCount<br />
+</li>
+<li>getDiseasedTiters<br />
+</li>
+<li>getNondiseasedTiters</li>
+</ul>
+<div id="starting-population-class-object" class="section level3">
+<h3>Starting population class object</h3>
+<p>Let’s start with the two population class objects - vaccinated, control - defined above.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>vaccinated &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>()</span>
+<span id="cb4-2"><a href="#cb4-2"></a>vaccinated<span class="op">$</span>N &lt;-<span class="st"> </span><span class="dv">1000</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a>vaccinated<span class="op">$</span>mean &lt;-<span class="st"> </span><span class="dv">7</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>vaccinated<span class="op">$</span>stdDev &lt;-<span class="st"> </span><span class="dv">2</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a></span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb4-7"><a href="#cb4-7"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb4-9"><a href="#cb4-9"></a><span class="co">#&gt;  $ mean               : num 7</span></span>
+<span id="cb4-10"><a href="#cb4-10"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb4-12"><a href="#cb4-12"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb4-13"><a href="#cb4-13"></a><span class="co">#&gt;  $ titers             : num(0) </span></span>
+<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb4-19"><a href="#cb4-19"></a></span>
+<span id="cb4-20"><a href="#cb4-20"></a>control &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>()</span>
+<span id="cb4-21"><a href="#cb4-21"></a>control<span class="op">$</span>N &lt;-<span class="st"> </span><span class="dv">1000</span></span>
+<span id="cb4-22"><a href="#cb4-22"></a>control<span class="op">$</span>mean &lt;-<span class="st"> </span><span class="dv">5</span></span>
+<span id="cb4-23"><a href="#cb4-23"></a>control<span class="op">$</span>stdDev &lt;-<span class="st"> </span><span class="dv">2</span></span>
+<span id="cb4-24"><a href="#cb4-24"></a></span>
+<span id="cb4-25"><a href="#cb4-25"></a><span class="kw">str</span>(control)</span>
+<span id="cb4-26"><a href="#cb4-26"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb4-27"><a href="#cb4-27"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb4-28"><a href="#cb4-28"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb4-29"><a href="#cb4-29"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb4-30"><a href="#cb4-30"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb4-31"><a href="#cb4-31"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb4-32"><a href="#cb4-32"></a><span class="co">#&gt;  $ titers             : num(0) </span></span>
+<span id="cb4-33"><a href="#cb4-33"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb4-34"><a href="#cb4-34"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb4-35"><a href="#cb4-35"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb4-36"><a href="#cb4-36"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb4-37"><a href="#cb4-37"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+<div id="gettiters" class="section level3">
+<h3>getTiters</h3>
+<p>Generate titers based on the population parameters - N, mean, stdDev - by sampling from the normal distribution.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>vaccinated<span class="op">$</span><span class="kw">getTiters</span>()</span>
+<span id="cb5-2"><a href="#cb5-2"></a>control<span class="op">$</span><span class="kw">getTiters</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;  $ mean               : num 7</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt;  $ titers             : num [1:1000] 5.23 3.16 10.24 8.04 6.89 ...</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb6-14"><a href="#cb6-14"></a><span class="kw">str</span>(control)</span>
+<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb6-20"><a href="#cb6-20"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb6-21"><a href="#cb6-21"></a><span class="co">#&gt;  $ titers             : num [1:1000] 6.48 5.77 7.59 3.39 1.79 ...</span></span>
+<span id="cb6-22"><a href="#cb6-22"></a><span class="co">#&gt;  $ PoDs               : num(0) </span></span>
+<span id="cb6-23"><a href="#cb6-23"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb6-24"><a href="#cb6-24"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb6-25"><a href="#cb6-25"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb6-26"><a href="#cb6-26"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+</div>
+<div id="assignpod" class="section level3">
+<h3>assignPoD</h3>
+<p>Assign PoD to each subject in the population based on the provided PoD function. We will use example from <code>vignette(&quot;simulation&quot;, package = &quot;PoDBAY&quot;)</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># Define PoD curve parameters</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a>PoDParams &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="st">&quot;pmax&quot;</span> =<span class="st"> </span><span class="fl">0.05</span>, <span class="st">&quot;et50&quot;</span> =<span class="st"> </span><span class="dv">5</span>, <span class="st">&quot;slope&quot;</span> =<span class="st"> </span><span class="dv">7</span>)</span>
+<span id="cb7-3"><a href="#cb7-3"></a></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="co"># Assign PoD</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>vaccinated<span class="op">$</span><span class="kw">assignPoD</span>(</span>
+<span id="cb7-6"><a href="#cb7-6"></a>  <span class="kw">PoD</span>(<span class="dt">titer =</span> vaccinated<span class="op">$</span>titers,</span>
+<span id="cb7-7"><a href="#cb7-7"></a>      <span class="dt">pmax =</span> PoDParams<span class="op">$</span>pmax,</span>
+<span id="cb7-8"><a href="#cb7-8"></a>      <span class="dt">et50 =</span> PoDParams<span class="op">$</span>et50,</span>
+<span id="cb7-9"><a href="#cb7-9"></a>      <span class="dt">slope =</span> PoDParams<span class="op">$</span>slope,</span>
+<span id="cb7-10"><a href="#cb7-10"></a>      <span class="dt">adjustTiters =</span> <span class="ot">FALSE</span></span>
+<span id="cb7-11"><a href="#cb7-11"></a>  ))</span>
+<span id="cb7-12"><a href="#cb7-12"></a></span>
+<span id="cb7-13"><a href="#cb7-13"></a>control<span class="op">$</span><span class="kw">assignPoD</span>(</span>
+<span id="cb7-14"><a href="#cb7-14"></a>  <span class="kw">PoD</span>(<span class="dt">titer =</span> control<span class="op">$</span>titers,</span>
+<span id="cb7-15"><a href="#cb7-15"></a>      <span class="dt">pmax =</span> PoDParams<span class="op">$</span>pmax,</span>
+<span id="cb7-16"><a href="#cb7-16"></a>      <span class="dt">et50 =</span> PoDParams<span class="op">$</span>et50,</span>
+<span id="cb7-17"><a href="#cb7-17"></a>      <span class="dt">slope =</span> PoDParams<span class="op">$</span>slope,</span>
+<span id="cb7-18"><a href="#cb7-18"></a>      <span class="dt">adjustTiters =</span> <span class="ot">FALSE</span></span>
+<span id="cb7-19"><a href="#cb7-19"></a>  ))</span>
+<span id="cb7-20"><a href="#cb7-20"></a></span>
+<span id="cb7-21"><a href="#cb7-21"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb7-22"><a href="#cb7-22"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb7-23"><a href="#cb7-23"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb7-24"><a href="#cb7-24"></a><span class="co">#&gt;  $ mean               : num 7</span></span>
+<span id="cb7-25"><a href="#cb7-25"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb7-26"><a href="#cb7-26"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb7-27"><a href="#cb7-27"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb7-28"><a href="#cb7-28"></a><span class="co">#&gt;  $ titers             : num [1:1000] 5.23 3.16 10.24 8.04 6.89 ...</span></span>
+<span id="cb7-29"><a href="#cb7-29"></a><span class="co">#&gt;  $ PoDs               : num [1:1000] 0.021135 0.048083 0.000329 0.001738 0.004799 ...</span></span>
+<span id="cb7-30"><a href="#cb7-30"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb7-31"><a href="#cb7-31"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb7-32"><a href="#cb7-32"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb7-33"><a href="#cb7-33"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb7-34"><a href="#cb7-34"></a><span class="kw">str</span>(control)</span>
+<span id="cb7-35"><a href="#cb7-35"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb7-36"><a href="#cb7-36"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb7-37"><a href="#cb7-37"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb7-38"><a href="#cb7-38"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb7-39"><a href="#cb7-39"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb7-40"><a href="#cb7-40"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb7-41"><a href="#cb7-41"></a><span class="co">#&gt;  $ titers             : num [1:1000] 6.48 5.77 7.59 3.39 1.79 ...</span></span>
+<span id="cb7-42"><a href="#cb7-42"></a><span class="co">#&gt;  $ PoDs               : num [1:1000] 0.00701 0.01338 0.00255 0.04689 0.04996 ...</span></span>
+<span id="cb7-43"><a href="#cb7-43"></a><span class="co">#&gt;  $ diseaseStatus      : logi(0) </span></span>
+<span id="cb7-44"><a href="#cb7-44"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb7-45"><a href="#cb7-45"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb7-46"><a href="#cb7-46"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+<p>Another way to assign PoD</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>vaccinated<span class="op">$</span><span class="kw">assignPoD</span>(</span>
+<span id="cb8-2"><a href="#cb8-2"></a>  <span class="kw">rep</span>(<span class="fl">0.05</span>, vaccinated<span class="op">$</span>N))</span>
+<span id="cb8-3"><a href="#cb8-3"></a></span>
+<span id="cb8-4"><a href="#cb8-4"></a>control<span class="op">$</span><span class="kw">assignPoD</span>(</span>
+<span id="cb8-5"><a href="#cb8-5"></a>  <span class="kw">rep</span>(<span class="fl">0.1</span>, control<span class="op">$</span>N))</span></code></pre></div>
+</div>
+<div id="getdiseasedcount-getnondiseasedcount-getdiseasedtiters-getnondiseasedtiters" class="section level3">
+<h3>getDiseasedCount, getNondiseasedCount, getDiseasedTiters, getNondiseasedTiters</h3>
+<p>For using these methods, the population class object needs to have disease status assigned.</p>
+<p>To assign disease status we will use <code>ClinicalTrial</code> function form the PoDBAY package.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>CaseCount &lt;-<span class="st"> </span><span class="kw">ClinicalTrial</span>(vaccinated, control, <span class="dt">CI =</span> <span class="fl">0.95</span>)</span>
+<span id="cb9-2"><a href="#cb9-2"></a></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="kw">str</span>(vaccinated)</span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="co">#&gt;  $ mean               : num 7</span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="co">#&gt;  $ titers             : num [1:1000] 5.23 3.16 10.24 8.04 6.89 ...</span></span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#&gt;  $ PoDs               : num [1:1000] 0.021135 0.048083 0.000329 0.001738 0.004799 ...</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:1000] FALSE FALSE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span>
+<span id="cb9-16"><a href="#cb9-16"></a><span class="kw">str</span>(control)</span>
+<span id="cb9-17"><a href="#cb9-17"></a><span class="co">#&gt; Reference class &#39;Population&#39; [package &quot;PoDBAY&quot;] with 8 fields</span></span>
+<span id="cb9-18"><a href="#cb9-18"></a><span class="co">#&gt;  $ N                  : num 1000</span></span>
+<span id="cb9-19"><a href="#cb9-19"></a><span class="co">#&gt;  $ mean               : num 5</span></span>
+<span id="cb9-20"><a href="#cb9-20"></a><span class="co">#&gt;  $ stdDev             : num 2</span></span>
+<span id="cb9-21"><a href="#cb9-21"></a><span class="co">#&gt;  $ unknownDistribution: logi FALSE</span></span>
+<span id="cb9-22"><a href="#cb9-22"></a><span class="co">#&gt;  $ UDFunction         :function ()  </span></span>
+<span id="cb9-23"><a href="#cb9-23"></a><span class="co">#&gt;  $ titers             : num [1:1000] 6.48 5.77 7.59 3.39 1.79 ...</span></span>
+<span id="cb9-24"><a href="#cb9-24"></a><span class="co">#&gt;  $ PoDs               : num [1:1000] 0.00701 0.01338 0.00255 0.04689 0.04996 ...</span></span>
+<span id="cb9-25"><a href="#cb9-25"></a><span class="co">#&gt;  $ diseaseStatus      : logi [1:1000] FALSE TRUE FALSE FALSE FALSE FALSE ...</span></span>
+<span id="cb9-26"><a href="#cb9-26"></a><span class="co">#&gt;  and 24 methods, of which 10 are  possibly relevant:</span></span>
+<span id="cb9-27"><a href="#cb9-27"></a><span class="co">#&gt;    assignPoD, getDiseasedCount, getDiseasedTiters, getNondiseasedCount,</span></span>
+<span id="cb9-28"><a href="#cb9-28"></a><span class="co">#&gt;    getNondiseasedTiters, getTiters, getUnknown, initialize, popFun, popX</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>vaccinated<span class="op">$</span><span class="kw">getDiseasedCount</span>()</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="co">#&gt; [1] 9</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a>vaccinated<span class="op">$</span><span class="kw">getNondiseasedCount</span>()</span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="co">#&gt; [1] 991</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a>vaccinated<span class="op">$</span><span class="kw">getDiseasedTiters</span>()</span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="co">#&gt; [1] 3.291161 5.083290 5.032390 3.605223 7.581768 4.333546 3.962850 5.538260</span></span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="co">#&gt; [9] 4.949354</span></span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="kw">as_tibble</span>(vaccinated<span class="op">$</span><span class="kw">getNondiseasedTiters</span>())</span>
+<span id="cb10-9"><a href="#cb10-9"></a><span class="co">#&gt; # A tibble: 991 x 1</span></span>
+<span id="cb10-10"><a href="#cb10-10"></a><span class="co">#&gt;    value</span></span>
+<span id="cb10-11"><a href="#cb10-11"></a><span class="co">#&gt;    &lt;dbl&gt;</span></span>
+<span id="cb10-12"><a href="#cb10-12"></a><span class="co">#&gt;  1  5.23</span></span>
+<span id="cb10-13"><a href="#cb10-13"></a><span class="co">#&gt;  2  3.16</span></span>
+<span id="cb10-14"><a href="#cb10-14"></a><span class="co">#&gt;  3 10.2 </span></span>
+<span id="cb10-15"><a href="#cb10-15"></a><span class="co">#&gt;  4  8.04</span></span>
+<span id="cb10-16"><a href="#cb10-16"></a><span class="co">#&gt;  5  6.89</span></span>
+<span id="cb10-17"><a href="#cb10-17"></a><span class="co">#&gt;  6  8.39</span></span>
+<span id="cb10-18"><a href="#cb10-18"></a><span class="co">#&gt;  7  7.11</span></span>
+<span id="cb10-19"><a href="#cb10-19"></a><span class="co">#&gt;  8  4.38</span></span>
+<span id="cb10-20"><a href="#cb10-20"></a><span class="co">#&gt;  9  2.75</span></span>
+<span id="cb10-21"><a href="#cb10-21"></a><span class="co">#&gt; 10  6.58</span></span>
+<span id="cb10-22"><a href="#cb10-22"></a><span class="co">#&gt; # … with 981 more rows</span></span></code></pre></div>
+</div>
+</div>
+<div id="how-to-convert-subject-level-data-into-the-population-class-object" class="section level2">
+<h2>How to convert subject level data into the population class object</h2>
+<p>We use mock-up data from a clinical trial and show how to convert them into a population class object so the data can be applied in the PoDBAY package.</p>
+<div id="mock-up-data" class="section level3">
+<h3>Mock-up data</h3>
+<p>Assume we have 20 patients from which 10 are vaccinated and 10 are in the control group. For each patient we have measurement of their <span class="math inline">\(log_2(titer)\)</span> values.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>dataTrial &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="st">&quot;patno&quot;</span> =<span class="st"> </span><span class="dv">1</span><span class="op">:</span><span class="dv">20</span>,</span>
+<span id="cb11-2"><a href="#cb11-2"></a>                        <span class="st">&quot;treatment&quot;</span> =<span class="st"> </span><span class="kw">c</span>(<span class="kw">rep</span>(<span class="ot">FALSE</span>, <span class="dv">10</span>), <span class="kw">rep</span>(<span class="ot">TRUE</span>, <span class="dv">10</span>)),</span>
+<span id="cb11-3"><a href="#cb11-3"></a>                        <span class="st">&quot;titers&quot;</span> =<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">c</span>(<span class="kw">rnorm</span>(<span class="dv">10</span>, <span class="dv">5</span>, <span class="dv">2</span>),</span>
+<span id="cb11-4"><a href="#cb11-4"></a>                                                <span class="kw">rnorm</span>(<span class="dv">10</span>, <span class="dv">7</span>, <span class="dv">2</span>)))</span>
+<span id="cb11-5"><a href="#cb11-5"></a>                        )</span>
+<span id="cb11-6"><a href="#cb11-6"></a></span>
+<span id="cb11-7"><a href="#cb11-7"></a>dataTrial</span>
+<span id="cb11-8"><a href="#cb11-8"></a><span class="co">#&gt;    patno treatment   titers</span></span>
+<span id="cb11-9"><a href="#cb11-9"></a><span class="co">#&gt; 1      1     FALSE 1.967253</span></span>
+<span id="cb11-10"><a href="#cb11-10"></a><span class="co">#&gt; 2      2     FALSE 6.258282</span></span>
+<span id="cb11-11"><a href="#cb11-11"></a><span class="co">#&gt; 3      3     FALSE 1.643612</span></span>
+<span id="cb11-12"><a href="#cb11-12"></a><span class="co">#&gt; 4      4     FALSE 7.359562</span></span>
+<span id="cb11-13"><a href="#cb11-13"></a><span class="co">#&gt; 5      5     FALSE 7.235309</span></span>
+<span id="cb11-14"><a href="#cb11-14"></a><span class="co">#&gt; 6      6     FALSE 2.524528</span></span>
+<span id="cb11-15"><a href="#cb11-15"></a><span class="co">#&gt; 7      7     FALSE 2.539671</span></span>
+<span id="cb11-16"><a href="#cb11-16"></a><span class="co">#&gt; 8      8     FALSE 6.195582</span></span>
+<span id="cb11-17"><a href="#cb11-17"></a><span class="co">#&gt; 9      9     FALSE 5.597729</span></span>
+<span id="cb11-18"><a href="#cb11-18"></a><span class="co">#&gt; 10    10     FALSE 4.779721</span></span>
+<span id="cb11-19"><a href="#cb11-19"></a><span class="co">#&gt; 11    11      TRUE 5.384650</span></span>
+<span id="cb11-20"><a href="#cb11-20"></a><span class="co">#&gt; 12    12      TRUE 7.229078</span></span>
+<span id="cb11-21"><a href="#cb11-21"></a><span class="co">#&gt; 13    13      TRUE 6.640960</span></span>
+<span id="cb11-22"><a href="#cb11-22"></a><span class="co">#&gt; 14    14      TRUE 7.109690</span></span>
+<span id="cb11-23"><a href="#cb11-23"></a><span class="co">#&gt; 15    15      TRUE 9.598280</span></span>
+<span id="cb11-24"><a href="#cb11-24"></a><span class="co">#&gt; 16    16      TRUE 6.130878</span></span>
+<span id="cb11-25"><a href="#cb11-25"></a><span class="co">#&gt; 17    17      TRUE 5.382154</span></span>
+<span id="cb11-26"><a href="#cb11-26"></a><span class="co">#&gt; 18    18      TRUE 5.955297</span></span>
+<span id="cb11-27"><a href="#cb11-27"></a><span class="co">#&gt; 19    19      TRUE 6.424569</span></span>
+<span id="cb11-28"><a href="#cb11-28"></a><span class="co">#&gt; 20    20      TRUE 5.713573</span></span></code></pre></div>
+</div>
+<div id="conversion-to-population-class-object" class="section level3">
+<h3>Conversion to population class object</h3>
+<p>We use approach from above and convert our mock-up data into the PoDBAY population class object.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co"># vaccinated</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>vacc &lt;-<span class="st"> </span>dataTrial <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(treatment)</span>
+<span id="cb12-3"><a href="#cb12-3"></a></span>
+<span id="cb12-4"><a href="#cb12-4"></a>vaccinated &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>()</span>
+<span id="cb12-5"><a href="#cb12-5"></a>vaccinated<span class="op">$</span>N &lt;-<span class="st"> </span><span class="kw">nrow</span>(vacc)</span>
+<span id="cb12-6"><a href="#cb12-6"></a>vaccinated<span class="op">$</span>mean &lt;-<span class="st"> </span><span class="kw">mean</span>(vacc<span class="op">$</span>titers)</span>
+<span id="cb12-7"><a href="#cb12-7"></a>vaccinated<span class="op">$</span>stdDev &lt;-<span class="st"> </span><span class="kw">sd</span>(vacc<span class="op">$</span>titers)</span>
+<span id="cb12-8"><a href="#cb12-8"></a>vaccinated<span class="op">$</span>titers &lt;-<span class="st"> </span>vacc<span class="op">$</span>titers</span>
+<span id="cb12-9"><a href="#cb12-9"></a></span>
+<span id="cb12-10"><a href="#cb12-10"></a>vaccinated</span>
+<span id="cb12-11"><a href="#cb12-11"></a><span class="co">#&gt; Reference class object of class &quot;Population&quot;</span></span>
+<span id="cb12-12"><a href="#cb12-12"></a><span class="co">#&gt; Field &quot;N&quot;:</span></span>
+<span id="cb12-13"><a href="#cb12-13"></a><span class="co">#&gt; [1] 10</span></span>
+<span id="cb12-14"><a href="#cb12-14"></a><span class="co">#&gt; Field &quot;mean&quot;:</span></span>
+<span id="cb12-15"><a href="#cb12-15"></a><span class="co">#&gt; [1] 6.556913</span></span>
+<span id="cb12-16"><a href="#cb12-16"></a><span class="co">#&gt; Field &quot;stdDev&quot;:</span></span>
+<span id="cb12-17"><a href="#cb12-17"></a><span class="co">#&gt; [1] 1.249035</span></span>
+<span id="cb12-18"><a href="#cb12-18"></a><span class="co">#&gt; Field &quot;unknownDistribution&quot;:</span></span>
+<span id="cb12-19"><a href="#cb12-19"></a><span class="co">#&gt; [1] FALSE</span></span>
+<span id="cb12-20"><a href="#cb12-20"></a><span class="co">#&gt; Field &quot;UDFunction&quot;:</span></span>
+<span id="cb12-21"><a href="#cb12-21"></a><span class="co">#&gt; function () </span></span>
+<span id="cb12-22"><a href="#cb12-22"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb12-23"><a href="#cb12-23"></a><span class="co">#&gt; &lt;bytecode: 0x24d3840&gt;</span></span>
+<span id="cb12-24"><a href="#cb12-24"></a><span class="co">#&gt; Field &quot;titers&quot;:</span></span>
+<span id="cb12-25"><a href="#cb12-25"></a><span class="co">#&gt;  [1] 5.384650 7.229078 6.640960 7.109690 9.598280 6.130878 5.382154 5.955297</span></span>
+<span id="cb12-26"><a href="#cb12-26"></a><span class="co">#&gt;  [9] 6.424569 5.713573</span></span>
+<span id="cb12-27"><a href="#cb12-27"></a><span class="co">#&gt; Field &quot;PoDs&quot;:</span></span>
+<span id="cb12-28"><a href="#cb12-28"></a><span class="co">#&gt; numeric(0)</span></span>
+<span id="cb12-29"><a href="#cb12-29"></a><span class="co">#&gt; Field &quot;diseaseStatus&quot;:</span></span>
+<span id="cb12-30"><a href="#cb12-30"></a><span class="co">#&gt; logical(0)</span></span>
+<span id="cb12-31"><a href="#cb12-31"></a></span>
+<span id="cb12-32"><a href="#cb12-32"></a><span class="co"># control</span></span>
+<span id="cb12-33"><a href="#cb12-33"></a>ctrl &lt;-<span class="st"> </span>dataTrial <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="op">!</span>treatment)</span>
+<span id="cb12-34"><a href="#cb12-34"></a></span>
+<span id="cb12-35"><a href="#cb12-35"></a>control &lt;-<span class="st"> </span><span class="kw">generatePopulation</span>()</span>
+<span id="cb12-36"><a href="#cb12-36"></a>control<span class="op">$</span>N &lt;-<span class="st"> </span><span class="kw">nrow</span>(ctrl)</span>
+<span id="cb12-37"><a href="#cb12-37"></a>control<span class="op">$</span>mean &lt;-<span class="st"> </span><span class="kw">mean</span>(ctrl<span class="op">$</span>titers)</span>
+<span id="cb12-38"><a href="#cb12-38"></a>control<span class="op">$</span>stdDev &lt;-<span class="st"> </span><span class="kw">sd</span>(ctrl<span class="op">$</span>titers)</span>
+<span id="cb12-39"><a href="#cb12-39"></a>control<span class="op">$</span>titers &lt;-<span class="st"> </span>ctrl<span class="op">$</span>titers</span>
+<span id="cb12-40"><a href="#cb12-40"></a></span>
+<span id="cb12-41"><a href="#cb12-41"></a></span>
+<span id="cb12-42"><a href="#cb12-42"></a>control</span>
+<span id="cb12-43"><a href="#cb12-43"></a><span class="co">#&gt; Reference class object of class &quot;Population&quot;</span></span>
+<span id="cb12-44"><a href="#cb12-44"></a><span class="co">#&gt; Field &quot;N&quot;:</span></span>
+<span id="cb12-45"><a href="#cb12-45"></a><span class="co">#&gt; [1] 10</span></span>
+<span id="cb12-46"><a href="#cb12-46"></a><span class="co">#&gt; Field &quot;mean&quot;:</span></span>
+<span id="cb12-47"><a href="#cb12-47"></a><span class="co">#&gt; [1] 4.610125</span></span>
+<span id="cb12-48"><a href="#cb12-48"></a><span class="co">#&gt; Field &quot;stdDev&quot;:</span></span>
+<span id="cb12-49"><a href="#cb12-49"></a><span class="co">#&gt; [1] 2.238717</span></span>
+<span id="cb12-50"><a href="#cb12-50"></a><span class="co">#&gt; Field &quot;unknownDistribution&quot;:</span></span>
+<span id="cb12-51"><a href="#cb12-51"></a><span class="co">#&gt; [1] FALSE</span></span>
+<span id="cb12-52"><a href="#cb12-52"></a><span class="co">#&gt; Field &quot;UDFunction&quot;:</span></span>
+<span id="cb12-53"><a href="#cb12-53"></a><span class="co">#&gt; function () </span></span>
+<span id="cb12-54"><a href="#cb12-54"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb12-55"><a href="#cb12-55"></a><span class="co">#&gt; &lt;bytecode: 0x24d3840&gt;</span></span>
+<span id="cb12-56"><a href="#cb12-56"></a><span class="co">#&gt; Field &quot;titers&quot;:</span></span>
+<span id="cb12-57"><a href="#cb12-57"></a><span class="co">#&gt;  [1] 1.967253 6.258282 1.643612 7.359562 7.235309 2.524528 2.539671 6.195582</span></span>
+<span id="cb12-58"><a href="#cb12-58"></a><span class="co">#&gt;  [9] 5.597729 4.779721</span></span>
+<span id="cb12-59"><a href="#cb12-59"></a><span class="co">#&gt; Field &quot;PoDs&quot;:</span></span>
+<span id="cb12-60"><a href="#cb12-60"></a><span class="co">#&gt; numeric(0)</span></span>
+<span id="cb12-61"><a href="#cb12-61"></a><span class="co">#&gt; Field &quot;diseaseStatus&quot;:</span></span>
+<span id="cb12-62"><a href="#cb12-62"></a><span class="co">#&gt; logical(0)</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
